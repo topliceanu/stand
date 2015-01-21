@@ -1,0 +1,6 @@
+--output ./doc
+--name "stand"
+--readme ./README.md
+--title "stand docs"
+./src
+-

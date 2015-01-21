@@ -1,9 +1,9 @@
 _ = require 'underscore'
-azure = require 'azure'
+azure = require 'azure-storage'
 Q = require 'q'
+schemajs = require 'schemajs'
 
 service = require './service'
-util = require '../util'
 
 
 class Model
@@ -15,18 +15,19 @@ class Model
         Entity methods are accessible from instance, id `model.insert()`
     ###
 
-    # Class.
+    ## Class
 
     # @static {String} table name.
     @tableName: null
 
     # @static {Object} instance of azure.TableService.
-    @service: service
+    @service: ->
+        service.getConnection()
 
     # Attach class methods to create tables.
     _.each ['createTable', 'createTableIfNotExists'], (method) =>
         @[method] = (params...) ->
-            Q.ninvoke @service, method, @tableName, params...
+            Q.ninvoke @service(), method, @tableName, params...
 
     # Attach class methods to manipulate and query entities and tables.
     # NOTE! Before calling this #build() must be called.
@@ -42,7 +43,7 @@ class Model
     ], (method) =>
         @[method] = (params...) ->
             @ready.then =>
-                Q.ninvoke @service, method, @tableName, params...
+                Q.ninvoke @service(), method, @tableName, params...
 
     @buildQuery: (keys) ->
         ###
@@ -64,7 +65,7 @@ class Model
             return Q.reject new Error 'Expected TableQuery param.'
 
         @ready.then =>
-             Q.ninvoke @service, 'queryEntities', query
+             Q.ninvoke @service(), 'queryEntities', query
 
 
     # Ensures the table is created in Azure Table Services.
@@ -96,12 +97,12 @@ class Model
         if (_.keys data).length > @MAX_NUM_PROPERTIES
             return Q.reject new Error 'Properties limit exceeded'
 
-        check = (util.schemajs.create @schema).validate data
+        check = (schemajs.create @schema).validate data
         if check.valid is true
             return Q.resolve check.data
         else
-            Q.reject new Error "Validation failed "+
-                "#{JSON.stringify check.errors} #{JSON.stringify data}"
+            Q.reject new Error \
+                "Validation failed: #{JSON.stringify check.erorrs}"
 
     @build: ->
         ###
@@ -123,16 +124,16 @@ class Model
             @schema = _.extend {}, @defaultSchema, @schema
         @ready
 
-    #@clearTable: ->
-    #    ###
-    #        Removes all entities from the the table.
-    #        To do this in azure, one must first delete the entire table
-    #        then re-create it.
-    #        @return {Object} Q.Promise resolves when table is re-created.
-    #    ###
-    #    @deleteTable().then =>
-    #        @ready = null
-    #        @build()
+    @clearTable: ->
+        ###
+            Removes all entities from the the table.
+            To do this in azure, one must first delete the entire table
+            then re-create it.
+            @return {Object} Q.Promise resolves when table is re-created.
+        ###
+        @deleteTable().then =>
+            @ready = null
+            @build()
 
     ## Instance.
 

@@ -1,26 +1,34 @@
 chai = require 'chai'
 Q = require 'q'
 
-Model = require '../src/Model'
+stand = require '../src/index'
+
+
+AZURE_STORAGE_ACCOUNT_NAME = 'vtdev'
+AZURE_STORAGE_ACCOUNT_ACCESS_KEY = 'S9LM1OJFY2etW7nx4LsvgbZmEyZRsS9OQ195qRa+tQcp71a8VYv+OEvqf3kjun1Ot1mzFy4p5g1wWMbJVXva6A=='
+
+stand.service.connect
+    account: AZURE_STORAGE_ACCOUNT_NAME
+    accessKey: AZURE_STORAGE_ACCOUNT_ACCESS_KEY
 
 
 describe 'Model', ->
-    @timeout 5000
+    @timeout 15000
 
-    describe 'class', ->
+    describe 'class properties', ->
         # NOTE ! These tests are not well isolated
         # and are not meant to be run individually!
 
         before ->
-            class @User extends Model
+            class @User extends stand.Model
                 @tableName: 'users'
                 @schema:
                     Username: {type: 'string+', required: true}
 
-            class @Event extends Model
+            class @Event extends stand.Model
                 @tableName: 'events'
 
-        it '#build() should correctly set @ready '+
+        it '.build() should correctly set @ready '+
            'after repeated instantiations', (done) ->
             user1 = new @User
             user2 = new @User
@@ -57,7 +65,7 @@ describe 'Model', ->
                 event3.constructor.ready
             ]).then (-> done()), done
 
-        it '#validate() should validate input data', (done) ->
+        it '.validate() should validate input data', (done) ->
             data =
                 PartitionKey: 'admins'
                 RowKey: '1'
@@ -74,28 +82,28 @@ describe 'Model', ->
                     'removes the data not defined in schema'
             .then (-> done()), done
 
-        it '#createTableIfNotExists() should create a named table '+
+        it '.createTableIfNotExists() should create a named table '+
            'if it does not yet exist or leave it be', (done) ->
             Q.all([
                 @User.createTableIfNotExists()
                 @Event.createTableIfNotExists()
             ]).then (-> done()), done
 
-        #it '#clearTable() should delete the table then recreate it', (done) ->
-        #    @User.clearTable().then ->
-        #        Q.delay 1000
-        #    .then (-> done()), done
+        it '.clearTable() should delete the table then recreate it', (done) ->
+            @User.clearTable().then ->
+                Q.delay 1000
+            .then (-> done()), done
 
-        it '#deleteTable() should remove tables from the service', (done) ->
+        it '.deleteTable() should remove tables from the service', (done) ->
             Q.all([
                 @User.deleteTable()
                 @Event.deleteTable()
             ]).then (-> done()), done
 
-    describe 'instance', ->
+    describe 'instance properties', ->
 
         before ->
-            class @Email extends Model
+            class @Email extends stand.Model
                 @tableName: 'emails'
                 @schema:
                     Dest: {type: 'string+'}
