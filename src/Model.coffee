@@ -6,21 +6,50 @@ schemajs = require 'schemajs'
 service = require './service'
 
 
+# Class manipulates tables and entities on the Azure Table Storage Service.
+#
+# All table methods are accessible from the class, ie. `Model.createTable`
+# All entity methods are accessible from instance, id `instance.insert()`
+#
+# @method #createTable(options)
+# @static
+# @param {string} table The table name.
+# @param {object} [options]
+# @param options {Object} locationMode
+# @param options {Number} timeoutIntervalInMs
+# @param options {Number} maximumExecutionTimeInMs
+# @param options {Boolean} useNagleAlgorithm
+# @param {Function} callback
+#
+# @method #createTableIfNotExists(options)
+# @static
+# @param {object} [options]
+# @param options {Object} locationMode
+# @param options {Number} timeoutIntervalInMs
+# @param options {Number} maximumExecutionTimeInMs
+# @param options {Boolean} useNagleAlgorithm
+# @param {Function} callback
+#
+# @method #deleteTable(options)
+# @method #deleteTableIfExists(options)
+# @method #queryEntity()
+# @method #insertEntity()
+# @method #insertOrReplaceEntity()
+# @method #updateEntity()
+# @method #mergeEntity()
+# @method #insertOrMergeEntity()
+# @method #deleteEntity()
+#
+#
 class Model
-    ###
-        Class manipulates tables and entities
-        on the Azure Table Storage Service.
 
-        Tables methods are accessible from the class, ie. `Model.createTable`
-        Entity methods are accessible from instance, id `model.insert()`
-    ###
-
-    ## Class
-
-    # @static {String} table name.
+    # @property {String} name of the table to communicate to.
+    # @static
     @tableName: null
 
-    # @static {Object} instance of azure.TableService.
+    # Method return a table service object.
+    #
+    # @return {Object} instance of azure.TableService.
     @service: ->
         service.getConnection()
 
@@ -33,6 +62,7 @@ class Model
     # NOTE! Before calling this #build() must be called.
     _.each [
         'deleteTable'
+        'deleteTableIfExists'
         'queryEntity'
         'insertEntity'
         'insertOrReplaceEntity'

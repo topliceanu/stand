@@ -23,7 +23,8 @@
 
 ## Features
 
-- Lightweigh wrapper on top of the official azure sdk, ie. [azure-storage-node](https://github.com/Azure/azure-storage-node).
+- Lightweigh wrapper on top of the [official azure storage sdk](https://github.com/Azure/azure-storage-node) with a OOP syntax.
+- Flexible schema definition language using [schemajs](https://github.com/eleith/schemajs) which ensures entity data validation.
 
 ## Install
 
@@ -34,9 +35,35 @@ npm install stand
 ## Quick Example
 
 ```javascript
+var util = require('util');
+
+var stand = require('stand');
+
+
+stand.connect({account: 'your storage account', accessKey: 'your access key'});
+
+var User = function (data) {
+    stand.Model.call(this, {
+        PartitionKey: data.last,
+        RowKey: data.first,
+        birthday: data.birth
+    });
+}
+User.schema = {
+    birth: {type: 'number'}
+};
+User.tableName = 'users';
+util.inherits(User, stand.Model);
+
+
+var me = new User({first: "Alex", last: "Topliceanu", birth: 526574909});
+me.save();
 ```
 
 ## More Examples
+
+See more in the `/examples` directory. All examples have instructions on __how to run and test them__.
+
 
 ## Contributing
 
@@ -48,7 +75,6 @@ npm install stand
 3. If you use [vagrant](https://www.vagrantup.com/) then simply clone the repo into a folder then issue `$ vagrant up`
     - if you don't use it, please consider learning it, it's easy to install and to get started with.
     - If you don't use it, then you have to:
-         - install mongodb and have it running on `localhost:27017`.
          - install node.js and all node packages required in development using `$ npm install`
          - For reference, see `./vagrant_boostrap.sh` for instructions on how to setup all dependencies on a fresh ubuntu 14.04 machine.
     - Run the tests to make sure you have a correct setup: `$ npm run test`

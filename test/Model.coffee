@@ -7,17 +7,20 @@ stand = require '../src/index'
 AZURE_STORAGE_ACCOUNT_NAME = 'vtdev'
 AZURE_STORAGE_ACCOUNT_ACCESS_KEY = 'S9LM1OJFY2etW7nx4LsvgbZmEyZRsS9OQ195qRa+tQcp71a8VYv+OEvqf3kjun1Ot1mzFy4p5g1wWMbJVXva6A=='
 
+
+# To run these test on your machine, please replace credentials with your own.
 stand.service.connect
-    account: AZURE_STORAGE_ACCOUNT_NAME
-    accessKey: AZURE_STORAGE_ACCOUNT_ACCESS_KEY
+    account: process.env.AZURE_STORAGE_ACCOUNT_NAME
+    accessKey: process.env.AZURE_STORAGE_ACCOUNT_ACCESS_KEY
 
 
 describe 'Model', ->
-    @timeout 15000
+
+    # Compensate for large lag when working with azure table storage
+    # from outside the data center.
+    @timeout 5000
 
     describe 'class properties', ->
-        # NOTE ! These tests are not well isolated
-        # and are not meant to be run individually!
 
         before ->
             class @User extends stand.Model
