@@ -18,7 +18,7 @@ describe 'Model', ->
 
     # Compensate for large lag when working with azure table storage
     # from outside the data center.
-    @timeout 10000
+    @timeout 20000
 
     describe 'class properties', ->
 
@@ -91,11 +91,6 @@ describe 'Model', ->
                 @User.createTableIfNotExists()
                 @Event.createTableIfNotExists()
             ]).then (-> done()), done
-
-        it '.clearTable() should delete the table then recreate it', (done) ->
-            @User.clearTable().then ->
-                Q.delay 1000
-            .then (-> done()), done
 
         it '.deleteTable() should remove tables from the service', (done) ->
             Q.all([
