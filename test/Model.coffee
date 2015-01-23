@@ -18,7 +18,7 @@ describe 'Model', ->
 
     # Compensate for large lag when working with azure table storage
     # from outside the data center.
-    @timeout 5000
+    @timeout 10000
 
     describe 'class properties', ->
 

@@ -39,7 +39,7 @@ class Model
 
         unless @ready?
             @ready = @deferred.promise
-            @createTableIfNotExists().then =>
+            (Q.ninvoke @service(), 'createTableIfNotExists', @tableName).then =>
                 @deferred.resolve()
             , (error) =>
                 @deferred.reject error
@@ -127,11 +127,12 @@ class Model
     # @param {Object} encampsulated data.
     data: null
 
+    # Builds an instace of an entity and ensures the Table is correctly created.
+    # It will not validate input data by default.
+    #
+    # @param {Object} data hash to be persisted to a table Entity.
+    #
     constructor: (@data = {}) ->
-        ###
-            Builds an instace of an entity and ensures the Table
-            is correctly created.
-        ###
         @constructor.build()
 
     # Attach instance methods to manipulate current entity.
@@ -141,17 +142,19 @@ class Model
         'updateEntity'
         'mergeEntity'
         'insertOrMergeEntity'
-        'deleteEntity'
     ], (method) =>
         @::[method] = (params...) ->
-            @constructor[method] @data, params...
+            (@constructor.validate @data).then (cleanData) =>
+                @constructor[method] cleanData, params...
 
+    deleteEntity: (params...) ->
+        @constructor.deleteEntity @data, params...
+
+    # Validates and cleans up the wrapped data
+    # then inserts or updates the current entity.
+    #
+    # @return {Q.Promise} resolves when the data is saved to an Entity.
     save: ->
-        ###
-            Validates and cleans up the wrapped data
-            then inserts or updates the current entity.
-            @return {Object} Q.Promise
-        ###
         (@constructor.validate @data).then (cleanData) =>
             @data = cleanData
             @insertOrMergeEntity()
