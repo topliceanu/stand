@@ -4,10 +4,6 @@ Q = require 'q'
 stand = require '../src/index'
 
 
-AZURE_STORAGE_ACCOUNT_NAME = 'vtdev'
-AZURE_STORAGE_ACCOUNT_ACCESS_KEY = 'S9LM1OJFY2etW7nx4LsvgbZmEyZRsS9OQ195qRa+tQcp71a8VYv+OEvqf3kjun1Ot1mzFy4p5g1wWMbJVXva6A=='
-
-
 # To run these test on your machine, please replace credentials with your own.
 stand.service.connect
     account: process.env.AZURE_STORAGE_ACCOUNT_NAME
