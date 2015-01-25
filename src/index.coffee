@@ -1,3 +1,3 @@
-# Public Module API.
+exports.schemajs = require './schemajs'
 exports.Model = require './Model'
-exports.service = require './service'
+exports.TableService = require './TableService'

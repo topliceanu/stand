@@ -24,6 +24,7 @@
 ## Features
 
 - Lightweigh wrapper on top of the [official azure storage sdk](https://github.com/Azure/azure-storage-node) with a OOP syntax.
+- All methods return promises instead of using the callback pattern.
 - Flexible schema definition language using [schemajs](https://github.com/eleith/schemajs) which ensures entity data validation.
 
 ## Install
