@@ -12,7 +12,7 @@ schemajs = require '../src/schemajs'
 # AZURE_STORAGE_ACCESS_KEY
 #
 describe 'Model', ->
-    @timeout 15000
+    @timeout 20000
 
     before (done) ->
         @testTableName = 'user'
