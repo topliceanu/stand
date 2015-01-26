@@ -3,7 +3,7 @@
 
 ## Gist
 
-**Stand** is a simple Object Document Mapper on top of Azure Table Storage Service.
+**Stand** is a lightweight Object Document Mapper on top of Azure Table Storage Service.
 
 ## Why?
 
