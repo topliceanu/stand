@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset='UTF-8'>
+  <title>stand - Azure Table Storage Object-Document Mapper</title>
+  <script src='../javascript/application.js'></script>
+  <script src='../javascript/search.js'></script>
+  <link rel='stylesheet' href='../stylesheets/application.css' type='text/css'>
+</head>
+  <body>
+    <div id='base' data-path='../'></div>
+<div id='header'>
+  <div id='menu'>
+    <a href='../extra/README.md.html' title='stand'>
+      stand
+    </a>
+    &raquo;
+    <a href='../alphabetical_index.html' title='Index'>
+      Index
+    </a>
+    &raquo;
+    <span class='title'>README.md</span>
+  </div>
+</div>
+    <div id='content'>
+      <nav class='toc'>
+        <p class='title'>
+          <a class='hide_toc' href='#'>
+            <strong>Table of Contents</strong>
+          </a>
+          <small>
+            (<a class='float_toc' href='#'>left</a>)
+          </small>
+        </p>
+      </nav>
+      <div id='filecontents'>
+        <h1 id="stand">Stand</h1>
+<h2 id="gist">Gist</h2><p><strong>Stand</strong> is a lightweight Object Document Mapper on top of Azure Table Storage Service.</p><h2 id="why-">Why?</h2><p>Azure Table Storage sdk for node is really well written and documented. This project should be used along-side the basic driver and attempts to simply add syntactic sugar on top of the existing sdk, eg. simple data modeling, promise-based api, etc.</p><h2 id="status">Status</h2><p><a href="https://nodei.co/npm/stand/"><img src="https://nodei.co/npm/stand.png?downloads=true&amp;stars=true" alt="NPM"></a></p><p><a href="https://nodei.co/npm-dl/stand/"><img src="https://nodei.co/npm-dl/stand.png?months=12" alt="NPM"></a></p><table>
+<thead>
+<tr>
+<th style="text-align:left">Indicator</th>
+<th style="text-align:left"></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">api documentation</td>
+<td style="text-align:left"><a href="http://topliceanu.github.io/stand">topliceanu.github.io/stand</a> <del><a href="http://coffeedoc.info/github/topliceanu/stand/master/">hosted on coffedoc.info</a></del></td>
+</tr>
+<tr>
+<td style="text-align:left">continuous integration</td>
+<td style="text-align:left"><a href="https://travis-ci.org/topliceanu/stand"><img src="https://travis-ci.org/topliceanu/stand.svg?branch=master" alt="Build Status"></a></td>
+</tr>
+<tr>
+<td style="text-align:left">dependency management</td>
+<td style="text-align:left"><a href="https://david-dm.org/topliceanu/stand"><img src="https://david-dm.org/topliceanu/stand.svg?style=flat" alt="Dependency Status"></a> <a href="https://david-dm.org/topliceanu/stand#info=devDependencies"><img src="https://david-dm.org/topliceanu/stand/dev-status.svg?style=flat" alt="devDependency Status"></a></td>
+</tr>
+<tr>
+<td style="text-align:left">code coverage</td>
+<td style="text-align:left"><a href="https://coveralls.io/r/topliceanu/stand?branch=master"><img src="https://coveralls.io/repos/topliceanu/stand/badge.svg?branch=master" alt="Coverage Status"></a></td>
+</tr>
+<tr>
+<td style="text-align:left">examples</td>
+<td style="text-align:left"><a href="https://github.com/topliceanu/stand/tree/master/examples">/examples</a></td>
+</tr>
+<tr>
+<td style="text-align:left">development management</td>
+<td style="text-align:left"><a href="http://waffle.io/topliceanu/stand"><img src="https://badge.waffle.io/topliceanu/stand.svg?label=ready&amp;title=Ready" alt="Stories in Ready"></a></td>
+</tr>
+<tr>
+<td style="text-align:left">change log</td>
+<td style="text-align:left"><a href="https://github.com/topliceanu/stand/blob/master/CHANGELOG.md">CHANGELOG</a> <a href="https://github.com/topliceanu/stand/releases">Releases</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="features">Features</h2>
+<ul>
+<li>Lightweigh wrapper on top of the <a href="https://github.com/Azure/azure-storage-node">official azure storage sdk</a> with an OOP syntax.</li>
+<li>All methods return promises instead of using the callback pattern.</li>
+<li>Flexible declarative schema DSL using <a href="https://github.com/eleith/schemajs">schemajs</a> which allows easy configuration of entity data validation, defaults, etc.</li>
+<li>Chaining table query API.</li>
+</ul>
+<h2 id="install">Install</h2>
+<pre><code class="lang-shell">npm install stand
+</code></pre>
+<h2 id="quick-example">Quick Example</h2>
+<pre><code class="lang-coffeescript">stand = require &#39;stand&#39;
+
+service = new stand.TableService &#39;my-storage-account&#39;, &#39;my-long-access-key&#39;
+
+class Url extends stand.Model
+    @schema:
+        &#39;Url&#39;: {type: &#39;Edm.String&#39;, required: true}
+
+service.register &#39;url&#39;, Url
+
+url = new Url
+    &#39;PartitionKey&#39;: &#39;u&#39;,
+    &#39;RowKey&#39;: &#39;2EfWx5p&#39;, # short hash.
+    &#39;Url&#39;: &#39;http://google.com&#39; # original url
+
+url.insert().then -&gt;
+    console.log &#39;successfully inserted the new url&#39;
+
+    Url.find()
+        .where(&#39;RowKey eq ?&#39;, &#39;2EfWx5p&#39;)
+        .exec().then (urls) -&gt;
+            console.log &quot;The expanded url is&quot;, (urls[0].get &#39;Url&#39;)
+.fail (error) -&gt;
+    console.log &#39;Failed to execute operations&#39;, error
+</code></pre>
+<h2 id="more-examples">More Examples</h2><p>See more in the <code>/examples</code> directory. All examples have instructions on <strong>how to run and test them</strong>.
+Examples are written in coffeescript but they should work just as fine in javascript.</p><ul>
+<li><a href="https://github.com/topliceanu/stand/blob/master/examples/basic-usage.js">examples/basic-usage.coffee</a> - shows how to define a new model class, create a model, persist it then retrieve it from the tables service.</li>
+<li><a href="https://github.com/topliceanu/stand/blob/master/examples/custom-schema.js">examples/custom-schema.coffee</a> - shows how to define a custom schema with default values, modifiers, validation and filtering.</li>
+</ul>
+<h2 id="contributing">Contributing</h2>
+<ol>
+<li>Contributions to this project are more than welcomed!<ul>
+<li>Anything from improving docs, code cleanup to advanced functionality is greatly appreciated.</li>
+<li>Before you start working on an ideea, please open an issue and describe in detail what you want to do and <strong>why it&#39;s important</strong>.</li>
+<li>You will get an answer in max 12h depending on your timezone.</li>
+</ul>
+</li>
+<li>Fork the repo!</li>
+<li>If you use <a href="https://www.vagrantup.com/">vagrant</a> then simply clone the repo into a folder then issue <code>$ vagrant up</code><ul>
+<li>if you don&#39;t use it, please consider learning it, it&#39;s easy to install and to get started with.</li>
+<li>If you don&#39;t use it, then you have to:<ul>
+<li>install node.js and all node packages required in development using <code>$ npm install</code></li>
+<li>For reference, see <code>./vagrant_boostrap.sh</code> for bash commands on how to setup all dependencies on a fresh ubuntu 14.04 machine.</li>
+</ul>
+</li>
+<li>Run the tests to make sure you have a correct setup: <code>$ npm run test</code><ul>
+<li>setup storage service connection credentials as global env variables: AZURE_STORAGE_ACCOUNT, AZURE_STORAGE_ACCESS_KEY</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Create a new branch and implement your feature.<ul>
+<li>make sure you add tests for your feature. In the end <strong>all tests have to pass</strong>! To run test suite <code>$ npm run test</code>.<ul>
+<li>please note that due to the nature of Azure Table Storage Service, sometimes the endpoints may timeout, which leads to failed tests, so increase test timeout as needed.</li>
+</ul>
+</li>
+<li>make sure test coverage does not decrease. Run <code>$ npm run coverage</code> to open a browser window with the coverage report.</li>
+<li>make sure you document your code and generated code looks ok. Run <code>$ npm run doc</code> to re-generate the documentation.</li>
+<li>make sure code is linted (and tests too). Run <code>$ npm run lint</code></li>
+<li>submit a pull request with your code.</li>
+<li>hit me up for a code review!</li>
+</ul>
+</li>
+<li>Have my kindest thanks for making this project better!</li>
+</ol>
+<h2 id="licence">Licence</h2><p>(The MIT License)</p><p>Copyright (c) 2012 Alexandru Topliceanu (alexandru.topliceanu@gmail.com)</p><p>Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+&#39;Software&#39;), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:</p><p>The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.</p><p>THE SOFTWARE IS PROVIDED &#39;AS IS&#39;, WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
+      </div>
+    </div>
+    <div id='footer'>
+  January 26, 15 12:21:59 by
+  <a href='https://github.com/coffeedoc/codo' title='CoffeeScript API documentation generator'>
+    Codo
+  </a>
+  2.0.9
+  &#10034;
+  Press H to see the keyboard shortcuts
+  &#10034;
+  <a href='http://twitter.com/netzpirat' target='_parent'>@netzpirat</a>
+  &#10034;
+  <a href='http://twitter.com/_inossidabile' target='_parent'>@_inossidabile</a>
+</div>
+<iframe id='search_frame'></iframe>
+<div id='fuzzySearch'>
+  <input type='text'>
+  <ol></ol>
+</div>
+<div id='help'>
+  <p>
+    Quickly fuzzy find classes, mixins, methods, file:
+  </p>
+  <ul>
+    <li>
+      <span>T</span>
+      Open fuzzy finder dialog
+    </li>
+  </ul>
+  <p>
+    Control the navigation frame:
+  </p>
+  <ul>
+    <li>
+      <span>L</span>
+      Toggle list view
+    </li>
+    <li>
+      <span>C</span>
+      Show class list
+    </li>
+    <li>
+      <span>I</span>
+      Show mixin list
+    </li>
+    <li>
+      <span>F</span>
+      Show file list
+    </li>
+    <li>
+      <span>M</span>
+      Show method list
+    </li>
+    <li>
+      <span>E</span>
+      Show extras list
+    </li>
+  </ul>
+  <p>
+    You can focus and blur the search input:
+  </p>
+  <ul>
+    <li>
+      <span>S</span>
+      Focus search input
+    </li>
+    <li>
+      <span>Esc</span>
+      Blur search input
+    </li>
+  </ul>
+</div>
+  </body>
+</html>

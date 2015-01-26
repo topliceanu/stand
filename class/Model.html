@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset='UTF-8'>
+  <title>stand - Azure Table Storage Object-Document Mapper</title>
+  <script src='../javascript/application.js'></script>
+  <script src='../javascript/search.js'></script>
+  <link rel='stylesheet' href='../stylesheets/application.css' type='text/css'>
+</head>
+  <body>
+    <div id='base' data-path='../'></div>
+<div id='header'>
+  <div id='menu'>
+    <a href='../extra/README.md.html' title='stand'>
+      stand
+    </a>
+    &raquo;
+    <a href='../alphabetical_index.html' title='Index'>
+      Index
+    </a>
+    &raquo;
+    <span class='title'>Model</span>
+  </div>
+</div>
+    <div id='content'>
+      <h1>
+        Class:
+        Model
+      </h1>
+      <table class='box'>
+        <tr>
+          <td>Defined in:</td>
+          <td>src&#47;Model.coffee</td>
+        </tr>
+      </table>
+      <h2>Overview</h2>
+      <div class='docstring'>
+  <p>Class manipulates tables and entities on the Azure Table Storage Service.</p><p>All table methods are accessible from the class, ie. <code>Model.createTable</code>
+All entity methods are accessible from instance, id <code>instance.insert()</code></p>
+</div>
+<div class='tags'>
+</div>
+      <h2>Property Summary</h2>
+      <dl class='properties'>
+        <dt id='MAX_NUM_PROPERTIES-property'>
+          <span class='signature'>
+            (Number)
+            <b>
+              MAX_NUM_PROPERTIES
+            </b>
+          </span>
+        </dt>
+        <dd class='desc'>
+          Max number of properties in an entity including PartitionKey, RowKey and Timestamp. 
+        </dd>
+        <dt id='data-property'>
+          <span class='signature'>
+            (Object)
+            <b>
+              data
+            </b>
+          </span>
+        </dt>
+        <dd class='desc'>
+          encampsulated entity data. 
+        </dd>
+      </dl>
+      <h2>Variables Summary</h2>
+      <dl class='constants'>
+  <dt id='tableName-variable'>
+    tableName
+    =
+  </dt>
+  <dd>
+    <pre><code class='coffeescript'>null</code></pre>
+    
+  </dd>
+  <dt id='ready-variable'>
+    ready
+    =
+  </dt>
+  <dd>
+    <pre><code class='coffeescript'>null</code></pre>
+    
+  </dd>
+  <dt id='service-variable'>
+    service
+    =
+  </dt>
+  <dd>
+    <pre><code class='coffeescript'>null</code></pre>
+    
+  </dd>
+  <dt id='schema-variable'>
+    schema
+    =
+  </dt>
+  <dd>
+    <pre><code class='coffeescript'>{}</code></pre>
+    
+  </dd>
+  <dt id='defaultSchema-variable'>
+    defaultSchema
+    =
+  </dt>
+  <dd>
+    <pre><code class='coffeescript'>{
+  PartitionKey: {
+    type: &#39;Edm.String&#39;,
+    required: true
+  },
+  RowKey: {
+    type: &#39;Edm.String&#39;,
+    required: true
+  },
+  Timestamp: {
+    type: &#39;Edm.DateTime&#39;
+  }
+}</code></pre>
+    
+  </dd>
+</dl>
+      <h2>Class Method Summary</h2>
+      <ul class='summary'>
+  <li>
+    <span class='signature'>
+      <a href='#build-static'>
+        .
+(stand.Model)
+<b>build</b><span>(tableName, service)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Utility method to initiate the table model. 
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#query-static'>
+        .
+(Q.Promise)
+<b>query</b><span>(tableQuery, currentToken, options)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Queries data in a table. 
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#find-static'>
+        .
+(TableQuery)
+<b>find</b><span>()</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Builds a query object which can be executed agains the current table. 
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#retrieve-static'>
+        .
+(Q.Promise)
+<b>retrieve</b><span>(partitionKey, rowKey, options)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Retrieves an entity from a table. 
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#validate-static'>
+        .
+(Q.Promise)
+<b>validate</b><span>(data)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Validates the given input data. 
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#prepareEntity-static'>
+        .
+(Object)
+<b>prepareEntity</b><span>(data, schema)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Method wraps each value of the data object in Edm Entities according to the given schema. 
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#extractData-static'>
+        .
+(Object)
+<b>extractData</b><span>(entity, schema)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Method extract raw data from a serialized entity. 
+    </span>
+  </li>
+</ul>
+      <h2>Instance Method Summary</h2>
+      <ul class='summary'>
+  <li>
+    <span class='signature'>
+      <a href='#get-dynamic'>
+        #
+(Object)
+<b>get</b><span>(key)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Acts as a getter for all properties stored in this entity. 
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#set-dynamic'>
+        #
+(stand.Model)
+<b>set</b><span>(key, value)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Acts as a getter for all properties stored in this entity. 
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#insert-dynamic'>
+        #
+(Q.Promise)
+<b>insert</b><span>(options)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Inserts a new entity into a table. 
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#insertOrReplace-dynamic'>
+        #
+(Q.Promise)
+<b>insertOrReplace</b><span>(options)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Inserts or updates a new entity into a table. 
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#update-dynamic'>
+        #
+(Q.Promise)
+<b>update</b><span>(options)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Updates an existing entity within a table by replacing it. 
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#merge-dynamic'>
+        #
+(Q.Promise)
+<b>merge</b><span>(options)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Updates an existing entity within a table by merging new property values into the entity. 
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#insertOrMerge-dynamic'>
+        #
+(Q.Promise)
+<b>insertOrMerge</b><span>(options)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Inserts or updates an existing entity within a table by merging new property values into the entity. 
+    </span>
+  </li>
+  <li>
+    <span class='signature'>
+      <a href='#delete-dynamic'>
+        #
+(Q.Promise)
+<b>delete</b><span>(options)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Deletes an entity within a table. 
+    </span>
+  </li>
+</ul>
+      <h2>Class Method Details</h2>
+      <div class='methods'>
+  <div class='method_details'>
+    <p class='signature' id='build-static'>
+      .
+(stand.Model)
+<b>build</b><span>(tableName, service)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Utility method to initiate the table model. It make sure the table exists
+and is ready for usage.
+This method should not be called, it is used in TableService.register</p><p>@static</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>tableName</span>
+      <span class='type'>
+        (
+          <tt>String</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>name of the table entity created in azure. </span>
+    </li>
+  </ul>
+  <h3>Throws:</h3>
+  <ul class='throw'>
+    <li>
+      <span class='type'></span>
+      (
+        <tt>?</tt>
+      )
+      &mdash;
+      <span class='desc'>Error when the name is invalid for Azure Table Storage. </span>
+    </li>
+  </ul>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span>
+      <tt>stand.Model</tt>
+    </li>
+  </ul>
+  <h3>See also:</h3>
+  <ul class='see'>
+    <li>
+      <a href='{TableService#register}'>{TableService#register}</a>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='query-static'>
+      .
+(Q.Promise)
+<b>query</b><span>(tableQuery, currentToken, options)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Queries data in a table. To retrieve a single entity by partition key and row key, use retrieve entity.</p><p>@static</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>tableQuery</span>
+      <span class='type'>
+        (
+          <tt>azure.TableQuery</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The query to perform. Use null, undefined, or new TableQuery() to get all of the entities in the table. </span>
+    </li>
+    <li>
+      <span class='name'>currentToken</span>
+      <span class='type'>
+        (
+          <tt>Object</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>A continuation token returned by a previous listing operation. Please use &#39;null&#39; or &#39;undefined&#39; if this is the first operation. </span>
+    </li>
+    <li>
+      <span class='name'>options</span>
+      <span class='type'>
+        (
+          <tt>Object</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The request options. </span>
+    </li>
+  </ul>
+  <h3>
+    Options Hash:
+    (options):
+  </h3>
+  <ul class='options'>
+    <li>
+      <span class='name'>locationMode</span>
+      <span class='type'>
+        (
+          <tt>LocationMode</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values. </span>
+    </li>
+    <li>
+      <span class='name'>timeoutIntervalInMs</span>
+      <span class='type'>
+        (
+          <tt>int</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The server timeout interval, in milliseconds, to use for the request. </span>
+    </li>
+    <li>
+      <span class='name'>payloadFormat</span>
+      <span class='type'>
+        (
+          <tt>string</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The payload format to use for the request. </span>
+    </li>
+    <li>
+      <span class='name'>autoResolveProperties</span>
+      <span class='type'>
+        (
+          <tt>bool</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>If true, guess at all property types. </span>
+    </li>
+    <li>
+      <span class='name'>maximumExecutionTimeInMs</span>
+      <span class='type'>
+        (
+          <tt>int</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries. </span>
+    </li>
+    <li>
+      <span class='name'>useNagleAlgorithm</span>
+      <span class='type'>
+        (
+          <tt>bool</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false. </span>
+    </li>
+    <li>
+      <span class='name'>entityResolver</span>
+      <span class='type'>
+        (
+          <tt>Function</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The entity resolver. Given a single entity returned by the query, returns a modified object which is added to the entities array. </span>
+    </li>
+    <li>
+      <span class='name'>propertyResolver</span>
+      <span class='type'>
+        (
+          <tt>TableService.propertyResolver</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The property resolver. Given the partition key, row key, property name, property value and the property Edm type if given by the service, returns the Edm type of the property. </span>
+    </li>
+  </ul>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span>
+      (
+        <tt>Q.Promise</tt>
+      )
+      &mdash;
+      <span class='desc'>resolves with a list of Model instances with data. </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='find-static'>
+      .
+(TableQuery)
+<b>find</b><span>()</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Builds a query object which can be executed agains the current table.</p>
+</div>
+<div class='tags'>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span>
+      (
+        <tt><a href='../class/TableQuery.html'>TableQuery</a></tt>
+      )
+      &mdash;
+      <span class='desc'>instance of stand.TableQuery bound to the current Model. </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='retrieve-static'>
+      .
+(Q.Promise)
+<b>retrieve</b><span>(partitionKey, rowKey, options)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Retrieves an entity from a table.</p><p>@static</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>partitionKey</span>
+      <span class='type'>
+        (
+          <tt>string</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The partition key. </span>
+    </li>
+    <li>
+      <span class='name'>rowKey</span>
+      <span class='type'>
+        (
+          <tt>string</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The row key. </span>
+    </li>
+    <li>
+      <span class='name'>options</span>
+      <span class='type'>
+        (
+          <tt>object</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The request options. </span>
+    </li>
+  </ul>
+  <h3>
+    Options Hash:
+    (options):
+  </h3>
+  <ul class='options'>
+    <li>
+      <span class='name'>locationMode</span>
+      <span class='type'>
+        (
+          <tt>LocationMode</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values. </span>
+    </li>
+    <li>
+      <span class='name'>timeoutIntervalInMs</span>
+      <span class='type'>
+        (
+          <tt>int</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The server timeout interval, in milliseconds, to use for the request. </span>
+    </li>
+    <li>
+      <span class='name'>payloadFormat</span>
+      <span class='type'>
+        (
+          <tt>string</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The payload format to use for the request. </span>
+    </li>
+    <li>
+      <span class='name'>maximumExecutionTimeInMs</span>
+      <span class='type'>
+        (
+          <tt>int</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries. </span>
+    </li>
+    <li>
+      <span class='name'>useNagleAlgorithm</span>
+      <span class='type'>
+        (
+          <tt>bool</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false. </span>
+    </li>
+    <li>
+      <span class='name'>propertyResolver</span>
+      <span class='type'>
+        (
+          <tt>TableService.propertyResolver</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The property resolver. Given the partition key, row key, property name, property value, and the property Edm type if given by the service, returns the Edm type of the property. </span>
+    </li>
+    <li>
+      <span class='name'>entityResolver</span>
+      <span class='type'>
+        (
+          <tt>Function</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The entity resolver. Given the single entity returned by the query, returns a modified object. </span>
+    </li>
+  </ul>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span>
+      (
+        <tt>Q.Promise</tt>
+      )
+      &mdash;
+      <span class='desc'>resolves with a list of returned data encapsulated in models. </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='validate-static'>
+      .
+(Q.Promise)
+<b>validate</b><span>(data)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Validates the given input data. If valid, it will return a
+cleaned version of the input data.
+Also makes sure the number of properties does not exceede the limit.</p><p>@static</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>data</span>
+      <span class='type'>
+        (
+          <tt>Object</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>hash to validate against the registered schema. </span>
+    </li>
+  </ul>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span>
+      (
+        <tt>Q.Promise</tt>
+      )
+      &mdash;
+      <span class='desc'>resolves with an object with clean data or an error if validation failed. </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='prepareEntity-static'>
+      .
+(Object)
+<b>prepareEntity</b><span>(data, schema)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Method wraps each value of the data object in Edm Entities according to the given schema.</p><p>@static</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>data</span>
+      <span class='type'>
+        (
+          <tt>Object</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>hash data to prepare, with format {&quot;key&quot;: &quot;value&quot;} </span>
+    </li>
+    <li>
+      <span class='name'>schema</span>
+      <span class='type'>
+        (
+          <tt>Object</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>object schema used to extract <code>type</code> information. </span>
+    </li>
+  </ul>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span>
+      (
+        <tt>Object</tt>
+      )
+      &mdash;
+      <span class='desc'>with the format {&quot;key&quot;: {$: &quot;edm data type&quot;, _: &quot;value&quot;}} </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='extractData-static'>
+      .
+(Object)
+<b>extractData</b><span>(entity, schema)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Method extract raw data from a serialized entity. The format</p><p>@static</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>entity</span>
+      <span class='type'>
+        (
+          <tt>Object</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>hash with format {&quot;key&quot;: {$: &quot;edm data type&quot;, _: &quot;value&quot;}} </span>
+    </li>
+    <li>
+      <span class='name'>schema</span>
+      <span class='type'>
+        (
+          <tt>Object</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>object schema used to extract <code>type</code> information. </span>
+    </li>
+  </ul>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span>
+      (
+        <tt>Object</tt>
+      )
+      &mdash;
+      <span class='desc'>plain data object, format {&quot;key&quot;: &quot;value&quot;} </span>
+    </li>
+  </ul>
+</div>
+  </div>
+</div>
+      <h2>Constructor Details</h2>
+      <div class='methods'>
+  <div class='method_details'>
+    <p class='signature' id='constructor-dynamic'>
+      #
+(void)
+<b>constructor</b><span>(data = {})</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Builds an instace of an entity and ensures the Table is correctly created.
+It will not validate input data by default.</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>data</span>
+      <span class='type'>
+        (
+          <tt>Object</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>hash to be persisted to a table Entity. </span>
+    </li>
+  </ul>
+</div>
+  </div>
+</div>
+      <h2>Instance Method Details</h2>
+      <div class='methods'>
+  <div class='method_details'>
+    <p class='signature' id='get-dynamic'>
+      #
+(Object)
+<b>get</b><span>(key)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Acts as a getter for all properties stored in this entity.</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>key</span>
+      <span class='type'>
+        (
+          <tt>String</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>the name of the property. </span>
+    </li>
+  </ul>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span>
+      (
+        <tt>Object</tt>
+      )
+      &mdash;
+      <span class='desc'>the value of the property. </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='set-dynamic'>
+      #
+(stand.Model)
+<b>set</b><span>(key, value)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Acts as a getter for all properties stored in this entity.</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>key</span>
+      <span class='type'>
+        (
+          <tt>String</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>the name of the property. </span>
+    </li>
+    <li>
+      <span class='name'>the</span>
+      <span class='type'>
+        (
+          <tt>Object</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>value of the property. </span>
+    </li>
+  </ul>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span>
+      (
+        <tt>stand.Model</tt>
+      )
+      &mdash;
+      <span class='desc'>return the current model instance. </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='insert-dynamic'>
+      #
+(Q.Promise)
+<b>insert</b><span>(options)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Inserts a new entity into a table.</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>options</span>
+      <span class='type'>
+        (
+          <tt>object</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The request options. </span>
+    </li>
+  </ul>
+  <h3>
+    Options Hash:
+    (options):
+  </h3>
+  <ul class='options'>
+    <li>
+      <span class='name'>options.echoContent]</span>
+      <span class='type'>
+        (
+          <tt>String</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>Whether or not to return the entity upon a successful insert. Default to false. </span>
+    </li>
+    <li>
+      <span class='name'>options.payloadFormat]</span>
+      <span class='type'>
+        (
+          <tt>String</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The payload format to use in the response, if options.echoContent is true. </span>
+    </li>
+    <li>
+      <span class='name'>options.locationMode]</span>
+      <span class='type'>
+        (
+          <tt>azure.LocationMode</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values. </span>
+    </li>
+    <li>
+      <span class='name'>options.timeoutIntervalInMs]</span>
+      <span class='type'>
+        (
+          <tt>Number</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The server timeout interval, in milliseconds, to use for the request. </span>
+    </li>
+    <li>
+      <span class='name'>options.maximumExecutionTimeInMs]</span>
+      <span class='type'>
+        (
+          <tt>Number</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries. </span>
+    </li>
+    <li>
+      <span class='name'>options.useNagleAlgorithm]</span>
+      <span class='type'>
+        (
+          <tt>Boolean</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false. </span>
+    </li>
+    <li>
+      <span class='name'>options.propertyResolver]</span>
+      <span class='type'>
+        (
+          <tt>TableService.propertyResolver</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The property resolver. Only applied if echoContent is true. Given the partition key, row key, property name, property value, and the property Edm type if given by the service, returns the Edm type of the property. </span>
+    </li>
+    <li>
+      <span class='name'>options.entityResolver</span>
+      <span class='type'>
+        (
+          <tt>Function</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The entity resolver. Only applied if echoContent is true. Given the single entity returned by the insert, returns a modified object. </span>
+    </li>
+  </ul>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span>
+      (
+        <tt>Q.Promise</tt>
+      )
+      &mdash;
+      <span class='desc'>resolves with the Model instance when it is successfully persisted. </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='insertOrReplace-dynamic'>
+      #
+(Q.Promise)
+<b>insertOrReplace</b><span>(options)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Inserts or updates a new entity into a table.</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>options</span>
+      <span class='type'>
+        (
+          <tt>Object</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The request options. </span>
+    </li>
+  </ul>
+  <h3>
+    Options Hash:
+    (options):
+  </h3>
+  <ul class='options'>
+    <li>
+      <span class='name'>locationMode</span>
+      <span class='type'>
+        (
+          <tt>LocationMode</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values. </span>
+    </li>
+    <li>
+      <span class='name'>timeoutIntervalInMs</span>
+      <span class='type'>
+        (
+          <tt>Number</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The server timeout interval, in milliseconds, to use for the request. </span>
+    </li>
+    <li>
+      <span class='name'>maximumExecutionTimeInMs</span>
+      <span class='type'>
+        (
+          <tt>Number</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries. </span>
+    </li>
+    <li>
+      <span class='name'>useNagleAlgorithm</span>
+      <span class='type'>
+        (
+          <tt>Boolean</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false. </span>
+    </li>
+  </ul>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span>
+      (
+        <tt>Q.Promise</tt>
+      )
+      &mdash;
+      <span class='desc'>resolves when the data has been persisted successfully. </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='update-dynamic'>
+      #
+(Q.Promise)
+<b>update</b><span>(options)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Updates an existing entity within a table by replacing it. To update conditionally based on etag, set entity[&#39;.metadata&#39;][&#39;etag&#39;].</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>options</span>
+      <span class='type'>
+        (
+          <tt>Object</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The request options. </span>
+    </li>
+  </ul>
+  <h3>
+    Options Hash:
+    (options):
+  </h3>
+  <ul class='options'>
+    <li>
+      <span class='name'>locationMode</span>
+      <span class='type'>
+        (
+          <tt>LocationMode</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values. </span>
+    </li>
+    <li>
+      <span class='name'>timeoutIntervalInMs</span>
+      <span class='type'>
+        (
+          <tt>Number</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The server timeout interval, in milliseconds, to use for the request. </span>
+    </li>
+    <li>
+      <span class='name'>maximumExecutionTimeInMs</span>
+      <span class='type'>
+        (
+          <tt>Number</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries. </span>
+    </li>
+    <li>
+      <span class='name'>useNagleAlgorithm</span>
+      <span class='type'>
+        (
+          <tt>Boolean</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false. </span>
+    </li>
+  </ul>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span>
+      (
+        <tt>Q.Promise</tt>
+      )
+      &mdash;
+      <span class='desc'>resolves when the entity is successfully replaced by the remote service. </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='merge-dynamic'>
+      #
+(Q.Promise)
+<b>merge</b><span>(options)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Updates an existing entity within a table by merging new property values into the entity. To merge conditionally based on etag, set entity[&#39;.metadata&#39;][&#39;etag&#39;].</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>options</span>
+      <span class='type'>
+        (
+          <tt>Object</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The request options. </span>
+    </li>
+  </ul>
+  <h3>
+    Options Hash:
+    (options):
+  </h3>
+  <ul class='options'>
+    <li>
+      <span class='name'>locationMode</span>
+      <span class='type'>
+        (
+          <tt>LocationMode</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values. </span>
+    </li>
+    <li>
+      <span class='name'>timeoutIntervalInMs</span>
+      <span class='type'>
+        (
+          <tt>Number</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The server timeout interval, in milliseconds, to use for the request. </span>
+    </li>
+    <li>
+      <span class='name'>maximumExecutionTimeInMs</span>
+      <span class='type'>
+        (
+          <tt>Number</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries. </span>
+    </li>
+    <li>
+      <span class='name'>useNagleAlgorithm</span>
+      <span class='type'>
+        (
+          <tt>Boolean</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false. </span>
+    </li>
+  </ul>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span>
+      (
+        <tt>Q.Promise</tt>
+      )
+      &mdash;
+      <span class='desc'>resolves when the entity is merged with the new data successfully. </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='insertOrMerge-dynamic'>
+      #
+(Q.Promise)
+<b>insertOrMerge</b><span>(options)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Inserts or updates an existing entity within a table by merging new property values into the entity.</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>options</span>
+      <span class='type'>
+        (
+          <tt>Object</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The request options. </span>
+    </li>
+  </ul>
+  <h3>
+    Options Hash:
+    (options):
+  </h3>
+  <ul class='options'>
+    <li>
+      <span class='name'>locationMode</span>
+      <span class='type'>
+        (
+          <tt>LocationMode</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values. </span>
+    </li>
+    <li>
+      <span class='name'>timeoutIntervalInMs</span>
+      <span class='type'>
+        (
+          <tt>Number</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The server timeout interval, in milliseconds, to use for the request. </span>
+    </li>
+    <li>
+      <span class='name'>maximumExecutionTimeInMs</span>
+      <span class='type'>
+        (
+          <tt>Number</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries. </span>
+    </li>
+    <li>
+      <span class='name'>useNagleAlgorithm</span>
+      <span class='type'>
+        (
+          <tt>Boolean</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false. </span>
+    </li>
+  </ul>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span>
+      (
+        <tt>Q.Promise</tt>
+      )
+      &mdash;
+      <span class='desc'>resolves when the entity is successfully persisted. </span>
+    </li>
+  </ul>
+</div>
+  </div>
+  <div class='method_details'>
+    <p class='signature' id='delete-dynamic'>
+      #
+(Q.Promise)
+<b>delete</b><span>(options)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Deletes an entity within a table. To delete conditionally based on etag, set entity[&#39;.metadata&#39;][&#39;etag&#39;].</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>options</span>
+      <span class='type'>
+        (
+          <tt>Object</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The request options. </span>
+    </li>
+  </ul>
+  <h3>
+    Options Hash:
+    (options):
+  </h3>
+  <ul class='options'>
+    <li>
+      <span class='name'>locationMode</span>
+      <span class='type'>
+        (
+          <tt>LocationMode</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values. </span>
+    </li>
+    <li>
+      <span class='name'>timeoutIntervalInMs</span>
+      <span class='type'>
+        (
+          <tt>Number</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The server timeout interval, in milliseconds, to use for the request. </span>
+    </li>
+    <li>
+      <span class='name'>maximumExecutionTimeInMs</span>
+      <span class='type'>
+        (
+          <tt>Number</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries. </span>
+    </li>
+    <li>
+      <span class='name'>useNagleAlgorithm</span>
+      <span class='type'>
+        (
+          <tt>Boolean</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false. </span>
+    </li>
+  </ul>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span>
+      (
+        <tt>Q.Promise</tt>
+      )
+      &mdash;
+      <span class='desc'>resolves when the entity is successfully removed. </span>
+    </li>
+  </ul>
+</div>
+  </div>
+</div>
+    </div>
+    <div id='footer'>
+  January 26, 15 12:21:59 by
+  <a href='https://github.com/coffeedoc/codo' title='CoffeeScript API documentation generator'>
+    Codo
+  </a>
+  2.0.9
+  &#10034;
+  Press H to see the keyboard shortcuts
+  &#10034;
+  <a href='http://twitter.com/netzpirat' target='_parent'>@netzpirat</a>
+  &#10034;
+  <a href='http://twitter.com/_inossidabile' target='_parent'>@_inossidabile</a>
+</div>
+<iframe id='search_frame'></iframe>
+<div id='fuzzySearch'>
+  <input type='text'>
+  <ol></ol>
+</div>
+<div id='help'>
+  <p>
+    Quickly fuzzy find classes, mixins, methods, file:
+  </p>
+  <ul>
+    <li>
+      <span>T</span>
+      Open fuzzy finder dialog
+    </li>
+  </ul>
+  <p>
+    Control the navigation frame:
+  </p>
+  <ul>
+    <li>
+      <span>L</span>
+      Toggle list view
+    </li>
+    <li>
+      <span>C</span>
+      Show class list
+    </li>
+    <li>
+      <span>I</span>
+      Show mixin list
+    </li>
+    <li>
+      <span>F</span>
+      Show file list
+    </li>
+    <li>
+      <span>M</span>
+      Show method list
+    </li>
+    <li>
+      <span>E</span>
+      Show extras list
+    </li>
+  </ul>
+  <p>
+    You can focus and blur the search input:
+  </p>
+  <ul>
+    <li>
+      <span>S</span>
+      Focus search input
+    </li>
+    <li>
+      <span>Esc</span>
+      Blur search input
+    </li>
+  </ul>
+</div>
+  </body>
+</html>

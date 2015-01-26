@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  <meta charset='UTF-8'>
+  <title>stand - Azure Table Storage Object-Document Mapper</title>
+  <script src='../javascript/application.js'></script>
+  <script src='../javascript/search.js'></script>
+  <link rel='stylesheet' href='../stylesheets/application.css' type='text/css'>
+</head>
+  <body>
+    <div id='base' data-path='../'></div>
+<div id='header'>
+  <div id='menu'>
+    <a href='../extra/README.md.html' title='stand'>
+      stand
+    </a>
+    &raquo;
+    <a href='../alphabetical_index.html' title='Index'>
+      Index
+    </a>
+    &raquo;
+    <span class='title'>TableQuery</span>
+  </div>
+</div>
+    <div id='content'>
+      <h1>
+        Class:
+        TableQuery
+      </h1>
+      <table class='box'>
+        <tr>
+          <td>Defined in:</td>
+          <td>src&#47;TableQuery.coffee</td>
+        </tr>
+        <tr>
+          <td>Inherits:</td>
+          <td>
+            azure.TableQuery
+          </td>
+        </tr>
+      </table>
+      <h2>Overview</h2>
+      <div class='docstring'>
+  <p>Extends a TableQuery instance to allow execution of the requests in
+the same chain as the configurations.</p>
+</div>
+<div class='tags'>
+</div>
+      <h2>Instance Method Summary</h2>
+      <ul class='summary'>
+  <li>
+    <span class='signature'>
+      <a href='#exec-dynamic'>
+        #
+(Q.Promise)
+<b>exec</b><span>(token, options)</span>
+      </a>
+    </span>
+    <span class='desc'>
+      Method executes the current table query object against the supplied model class.
+
+    </span>
+  </li>
+</ul>
+      <h2>Constructor Details</h2>
+      <div class='methods'>
+  <div class='method_details'>
+    <p class='signature' id='constructor-dynamic'>
+      #
+(void)
+<b>constructor</b><span>(Model)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Builds the instance also attaching a Models class which allows executing
+queryies in a chained manner.</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>Model</span>
+      <span class='type'>
+        (
+          <tt>stand.Model</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>usefull for executing the query. </span>
+    </li>
+  </ul>
+</div>
+  </div>
+</div>
+      <h2>Instance Method Details</h2>
+      <div class='methods'>
+  <div class='method_details'>
+    <p class='signature' id='exec-dynamic'>
+      #
+(Q.Promise)
+<b>exec</b><span>(token, options)</span>
+      <br>
+    </p>
+    <div class='docstring'>
+  <p>Method executes the current table query object against the supplied
+model class.</p>
+</div>
+<div class='tags'>
+  <h3>Parameters:</h3>
+  <ul class='param'>
+    <li>
+      <span class='name'>currentToken</span>
+      <span class='type'>
+        (
+          <tt>Object</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>A continuation token returned by a previous listing operation. Please use &#39;null&#39; or &#39;undefined&#39; if this is the first operation. </span>
+    </li>
+    <li>
+      <span class='name'>options</span>
+      <span class='type'>
+        (
+          <tt>Object</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The request options. </span>
+    </li>
+  </ul>
+  <h3>
+    Options Hash:
+    (options):
+  </h3>
+  <ul class='options'>
+    <li>
+      <span class='name'>locationMode</span>
+      <span class='type'>
+        (
+          <tt>LocationMode</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values. </span>
+    </li>
+    <li>
+      <span class='name'>timeoutIntervalInMs</span>
+      <span class='type'>
+        (
+          <tt>Number</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The server timeout interval, in milliseconds, to use for the request. </span>
+    </li>
+    <li>
+      <span class='name'>payloadFormat</span>
+      <span class='type'>
+        (
+          <tt>String</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The payload format to use for the request. </span>
+    </li>
+    <li>
+      <span class='name'>autoResolveProperties</span>
+      <span class='type'>
+        (
+          <tt>Boolean</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>If true, guess at all property types. </span>
+    </li>
+    <li>
+      <span class='name'>maximumExecutionTimeInMs</span>
+      <span class='type'>
+        (
+          <tt>Number</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries. </span>
+    </li>
+    <li>
+      <span class='name'>useNagleAlgorithm</span>
+      <span class='type'>
+        (
+          <tt>Boolean</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false. </span>
+    </li>
+    <li>
+      <span class='name'>entityResolver</span>
+      <span class='type'>
+        (
+          <tt>Function</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The entity resolver. Given a single entity returned by the query, returns a modified object which is added to the entities array. </span>
+    </li>
+    <li>
+      <span class='name'>propertyResolver</span>
+      <span class='type'>
+        (
+          <tt>TableService.propertyResolver</tt>
+        )
+      </span>
+      &mdash;
+      <span class='desc'>The property resolver. Given the partition key, row key, property name, property value, and the property Edm type if given by the service, returns the Edm type of the property. </span>
+    </li>
+  </ul>
+  <h3>Returns:</h3>
+  <ul class='return'>
+    <li>
+      <span class='type'></span>
+      (
+        <tt>Q.Promise</tt>
+      )
+      &mdash;
+      <span class='desc'>resolves with the reponse from the server. </span>
+    </li>
+  </ul>
+</div>
+  </div>
+</div>
+    </div>
+    <div id='footer'>
+  January 26, 15 12:21:59 by
+  <a href='https://github.com/coffeedoc/codo' title='CoffeeScript API documentation generator'>
+    Codo
+  </a>
+  2.0.9
+  &#10034;
+  Press H to see the keyboard shortcuts
+  &#10034;
+  <a href='http://twitter.com/netzpirat' target='_parent'>@netzpirat</a>
+  &#10034;
+  <a href='http://twitter.com/_inossidabile' target='_parent'>@_inossidabile</a>
+</div>
+<iframe id='search_frame'></iframe>
+<div id='fuzzySearch'>
+  <input type='text'>
+  <ol></ol>
+</div>
+<div id='help'>
+  <p>
+    Quickly fuzzy find classes, mixins, methods, file:
+  </p>
+  <ul>
+    <li>
+      <span>T</span>
+      Open fuzzy finder dialog
+    </li>
+  </ul>
+  <p>
+    Control the navigation frame:
+  </p>
+  <ul>
+    <li>
+      <span>L</span>
+      Toggle list view
+    </li>
+    <li>
+      <span>C</span>
+      Show class list
+    </li>
+    <li>
+      <span>I</span>
+      Show mixin list
+    </li>
+    <li>
+      <span>F</span>
+      Show file list
+    </li>
+    <li>
+      <span>M</span>
+      Show method list
+    </li>
+    <li>
+      <span>E</span>
+      Show extras list
+    </li>
+  </ul>
+  <p>
+    You can focus and blur the search input:
+  </p>
+  <ul>
+    <li>
+      <span>S</span>
+      Focus search input
+    </li>
+    <li>
+      <span>Esc</span>
+      Blur search input
+    </li>
+  </ul>
+</div>
+  </body>
+</html>
