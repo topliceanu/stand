@@ -17,7 +17,7 @@ Azure Table Storage sdk for node is really well written and documented. This pro
 
 | Indicator              |                                                                          |
 |:-----------------------|:-------------------------------------------------------------------------|
-| documentation          | [topliceanu.github.io/stand](http://topliceanu.github.io/stand) ~~[hosted on coffedoc.info](http://coffeedoc.info/github/topliceanu/stand/master/)~~|
+| api documentation      | [topliceanu.github.io/stand](http://topliceanu.github.io/stand) ~~[hosted on coffedoc.info](http://coffeedoc.info/github/topliceanu/stand/master/)~~|
 | continuous integration | [![Build Status](https://travis-ci.org/topliceanu/stand.svg?branch=master)](https://travis-ci.org/topliceanu/stand) |
 | dependency management  | [![Dependency Status](https://david-dm.org/topliceanu/stand.svg?style=flat)](https://david-dm.org/topliceanu/stand) [![devDependency Status](https://david-dm.org/topliceanu/stand/dev-status.svg?style=flat)](https://david-dm.org/topliceanu/stand#info=devDependencies) |
 | code coverage          | [![Coverage Status](https://coveralls.io/repos/topliceanu/stand/badge.svg?branch=master)](https://coveralls.io/r/topliceanu/stand?branch=master) |
