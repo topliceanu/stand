@@ -16,7 +16,7 @@ class TableService extends azure.TableService
     # @param {String} sasToken The Shared Access Signature token.
     #
     constructor: ->
-        super arguments..
+        super arguments...
 
     # Initiates a new Table with the Azure Storage Service.
     #
