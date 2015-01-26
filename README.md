@@ -7,7 +7,7 @@
 
 ## Why?
 
-Azure Table Storage sdk for node is really well written and documented. This project should be used along-side the basic driver and attempts to simply add syntactic sugar on top of the supported sdk, eg. simple data modeling, extensive usage of promises, etc.
+Azure Table Storage sdk for node is really well written and documented. This project should be used along-side the basic driver and attempts to simply add syntactic sugar on top of the existing sdk, eg. simple data modeling, promise-based api, etc.
 
 ## Status
 
@@ -27,7 +27,7 @@ Azure Table Storage sdk for node is really well written and documented. This pro
 
 ## Features
 
-- Lightweigh wrapper on top of the [official azure storage sdk](https://github.com/Azure/azure-storage-node) with a OOP syntax.
+- Lightweigh wrapper on top of the [official azure storage sdk](https://github.com/Azure/azure-storage-node) with an OOP syntax.
 - All methods return promises instead of using the callback pattern.
 - Flexible declarative schema DSL using [schemajs](https://github.com/eleith/schemajs) which allows easy configuration of entity data validation, defaults, etc.
 - Chaining table query API.

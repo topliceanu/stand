@@ -13,29 +13,25 @@ TableQuery = require './TableQuery'
 #
 class Model
 
-    # @property {String} name of the table to communicate to.
-    # @static
+    # @property {String} Name of the table to communicate to.
     @tableName: null
 
-    # Ensures the table is created in Azure Table Services.
-    # This method is called only once per process.
-    # @static {Object} Q.Promise resoves when the table is correctly created.
+    # @property {Q.Promise} Promise resolves when the table is created in Azure Table Services.
     @ready: null
 
-    # @static {Object} instance of azure.TableService.
+    # @property {azure.TableService} connection to the tables service.
     @service: null
 
-    # @static {Object} table schema used for validation. No more than 252
-    # properties are allowed with the mandatory PartitionKey and RowKey.
+    # @property {Object} Table schema used for validation.
     @schema: {}
 
-    # @static {Object} all schemas must contain PartitionKey and RowKey. They also have a ready-only Timestamp key.
+    # @property {Object} Default entity schema. All schemas contain PartitionKey, RowKey and Timestamp by default.
     @defaultSchema:
         PartitionKey: {type: 'Edm.String', required: true}
         RowKey: {type: 'Edm.String', required: true}
         Timestamp: {type: 'Edm.DateTime'}
 
-    # @static {Number} max number of properties in an entity.
+    # @property {Number} Max number of properties in an entity including PartitionKey, RowKey and Timestamp.
     @MAX_NUM_PROPERTIES: 255
 
     # Utility method to initiate the table model. It make sure the table exists
@@ -43,8 +39,10 @@ class Model
     # This method should not be called, it is used in TableService.register
     #
     # @static
-    # @see {TableService.register}
+    # @see {TableService#register}
     # @param {String} tableName name of the table entity created in azure.
+    # @return {stand.Model}
+    # @throw Error when the name is invalid for Azure Table Storage.
     @build: (tableName, service) ->
         unless (_.isString tableName) and
                (/^([A-Za-z][A-Za-z0-9]{2,62})$/.test tableName)
@@ -73,14 +71,14 @@ class Model
     # @param {azure.TableQuery} tableQuery              The query to perform. Use null, undefined, or new TableQuery() to get all of the entities in the table.
     # @param {Object}  currentToken            A continuation token returned by a previous listing operation. Please use 'null' or 'undefined' if this is the first operation.
     # @param {Object} options               The request options.
-    # @param options {LocationMode} locationMode          Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values.
-    # @param options {int} timeoutIntervalInMs   The server timeout interval, in milliseconds, to use for the request.
-    # @param options {string} payloadFormat         The payload format to use for the request.
-    # @param options {bool} autoResolveProperties If true, guess at all property types.
-    # @param options {int} maximumExecutionTimeInMs  The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries.
-    # @param options {bool} useNagleAlgorithm         Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false.
-    # @param options {Function} entityResolver              The entity resolver. Given a single entity returned by the query, returns a modified object which is added to the entities array.
-    # @param options {TableService.propertyResolver}  propertyResolver               The property resolver. Given the partition key, row key, property name, property value and the property Edm type if given by the service, returns the Edm type of the property.
+    # @option options {LocationMode} locationMode          Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values.
+    # @option options {int} timeoutIntervalInMs   The server timeout interval, in milliseconds, to use for the request.
+    # @option options {string} payloadFormat         The payload format to use for the request.
+    # @option options {bool} autoResolveProperties If true, guess at all property types.
+    # @option options {int} maximumExecutionTimeInMs  The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries.
+    # @option options {bool} useNagleAlgorithm         Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false.
+    # @option options {Function} entityResolver              The entity resolver. Given a single entity returned by the query, returns a modified object which is added to the entities array.
+    # @option options {TableService.propertyResolver}  propertyResolver               The property resolver. Given the partition key, row key, property name, property value and the property Edm type if given by the service, returns the Edm type of the property.
     # @return {Q.Promise} resolves with a list of Model instances with data.
     @query: (tableQuery, currentToken, options) ->
         @ready.then =>
@@ -102,13 +100,13 @@ class Model
     # @param {string}  partitionKey                                    The partition key.
     # @param {string}  rowKey                                          The row key.
     # @param {object}  options                                       The request options.
-    # @param options {LocationMode}  locationMode                          Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values.
-    # @param options {int}           timeoutIntervalInMs                   The server timeout interval, in milliseconds, to use for the request.
-    # @param options {string}        payloadFormat                         The payload format to use for the request.
-    # @param options {int}           maximumExecutionTimeInMs              The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries.
-    # @param options {bool}          useNagleAlgorithm                     Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false.
-    # @param options {TableService.propertyResolver}  propertyResolver          The property resolver. Given the partition key, row key, property name, property value, and the property Edm type if given by the service, returns the Edm type of the property.
-    # @param options {Function} entityResolver        The entity resolver. Given the single entity returned by the query, returns a modified object.
+    # @option options {LocationMode}  locationMode                          Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values.
+    # @option options {int}           timeoutIntervalInMs                   The server timeout interval, in milliseconds, to use for the request.
+    # @option options {string}        payloadFormat                         The payload format to use for the request.
+    # @option options {int}           maximumExecutionTimeInMs              The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries.
+    # @option options {bool}          useNagleAlgorithm                     Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false.
+    # @option options {TableService.propertyResolver}  propertyResolver          The property resolver. Given the partition key, row key, property name, property value, and the property Edm type if given by the service, returns the Edm type of the property.
+    # @option options {Function} entityResolver        The entity resolver. Given the single entity returned by the query, returns a modified object.
     # @return {Q.Promise} resolves with a list of returned data encapsulated in models.
     #
     @retrieve: (partitionKey, rowKey, options) ->
@@ -171,7 +169,7 @@ class Model
 
     ## Instance.
 
-    # @param {Object} encampsulated data.
+    # @property {Object} encampsulated entity data.
     data: {}
 
     # Acts as a getter for all properties stored in this entity.
@@ -202,14 +200,14 @@ class Model
     # Inserts a new entity into a table.
     #
     # @param {object}              options                                       The request options.
-    # @param options {string}              options.echoContent]                           Whether or not to return the entity upon a successful insert. Default to false.
-    # @param options {string}              options.payloadFormat]                         The payload format to use in the response, if options.echoContent is true.
-    # @param options {LocationMode}        options.locationMode]                          Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values.
-    # @param options {int}                 options.timeoutIntervalInMs]                   The server timeout interval, in milliseconds, to use for the request.
-    # @param options {int}                 options.maximumExecutionTimeInMs]              The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries.
-    # @param options {bool}                options.useNagleAlgorithm]                     Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false.
-    # @param options {TableService~propertyResolver}   options.propertyResolver]          The property resolver. Only applied if echoContent is true. Given the partition key, row key, property name, property value, and the property Edm type if given by the service, returns the Edm type of the property.
-    # @param options {Function}  options.entityResolver                          The entity resolver. Only applied if echoContent is true. Given the single entity returned by the insert, returns a modified object.
+    # @option options {String}              options.echoContent]                           Whether or not to return the entity upon a successful insert. Default to false.
+    # @option options {String}              options.payloadFormat]                         The payload format to use in the response, if options.echoContent is true.
+    # @option options {azure.LocationMode}        options.locationMode]                          Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values.
+    # @option options {Number}                 options.timeoutIntervalInMs]                   The server timeout interval, in milliseconds, to use for the request.
+    # @option options {Number}                 options.maximumExecutionTimeInMs]              The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries.
+    # @option options {Boolean}                options.useNagleAlgorithm]                     Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false.
+    # @option options {TableService.propertyResolver}   options.propertyResolver]          The property resolver. Only applied if echoContent is true. Given the partition key, row key, property name, property value, and the property Edm type if given by the service, returns the Edm type of the property.
+    # @option options {Function}  options.entityResolver                          The entity resolver. Only applied if echoContent is true. Given the single entity returned by the insert, returns a modified object.
     # @return {Q.Promise} resolves with the Model instance when it is successfully persisted.
     #
     insert: (options) ->
@@ -225,10 +223,10 @@ class Model
     # Inserts or updates a new entity into a table.
     #
     # @param {Object}     options                               The request options.
-    # @param options {LocationMode} locationMode                  Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values.
-    # @param options {Number}  timeoutIntervalInMs           The server timeout interval, in milliseconds, to use for the request.
-    # @param options {Number}  maximumExecutionTimeInMs      The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries.
-    # @param options {Boolean} useNagleAlgorithm             Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false.
+    # @option options {LocationMode} locationMode                  Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values.
+    # @option options {Number}  timeoutIntervalInMs           The server timeout interval, in milliseconds, to use for the request.
+    # @option options {Number}  maximumExecutionTimeInMs      The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries.
+    # @option options {Boolean} useNagleAlgorithm             Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false.
     # @return {Q.Promise} resolves when the data has been persisted successfully.
     #
     insertOrReplace: (options) ->
@@ -244,10 +242,10 @@ class Model
     # Updates an existing entity within a table by replacing it. To update conditionally based on etag, set entity['.metadata']['etag'].
     #
     # @param {Object}             options                               The request options.
-    # @param options {LocationMode} locationMode                  Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values.
-    # @param options {Number}       timeoutIntervalInMs           The server timeout interval, in milliseconds, to use for the request.
-    # @param options {Number}       maximumExecutionTimeInMs      The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries.
-    # @param options {Boolean}      useNagleAlgorithm             Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false.
+    # @option options {LocationMode} locationMode                  Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values.
+    # @option options {Number}       timeoutIntervalInMs           The server timeout interval, in milliseconds, to use for the request.
+    # @option options {Number}       maximumExecutionTimeInMs      The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries.
+    # @option options {Boolean}      useNagleAlgorithm             Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false.
     # @return {Q.Promise} resolves when the entity is successfully replaced by the remote service.
     #
     update: (options) ->
@@ -263,10 +261,10 @@ class Model
     # Updates an existing entity within a table by merging new property values into the entity. To merge conditionally based on etag, set entity['.metadata']['etag'].
     #
     # @param {Object}       options                               The request options.
-    # @param options {LocationMode} locationMode                  Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values.
-    # @param options {Number}   timeoutIntervalInMs           The server timeout interval, in milliseconds, to use for the request.
-    # @param options {Number}   maximumExecutionTimeInMs      The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries.
-    # @param options {Boolean}  useNagleAlgorithm             Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false.
+    # @option options {LocationMode} locationMode                  Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values.
+    # @option options {Number}   timeoutIntervalInMs           The server timeout interval, in milliseconds, to use for the request.
+    # @option options {Number}   maximumExecutionTimeInMs      The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries.
+    # @option options {Boolean}  useNagleAlgorithm             Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false.
     # @return {Q.Promise} resolves when the entity is merged with the new data successfully.
     #
     merge: (options) ->
@@ -282,10 +280,10 @@ class Model
     # Inserts or updates an existing entity within a table by merging new property values into the entity.
     #
     # @param {Object}       options                               The request options.
-    # @param options {LocationMode} locationMode                  Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values.
-    # @param options {Number}  timeoutIntervalInMs           The server timeout interval, in milliseconds, to use for the request.
-    # @param options {Number}  maximumExecutionTimeInMs      The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries.
-    # @param options {Boolean} useNagleAlgorithm             Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false.
+    # @option options {LocationMode} locationMode                  Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values.
+    # @option options {Number}  timeoutIntervalInMs           The server timeout interval, in milliseconds, to use for the request.
+    # @option options {Number}  maximumExecutionTimeInMs      The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries.
+    # @option options {Boolean} useNagleAlgorithm             Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false.
     # @return {Q.Promise} resolves when the entity is successfully persisted.
     #
     insertOrMerge: (options) ->
@@ -301,10 +299,10 @@ class Model
     # Deletes an entity within a table. To delete conditionally based on etag, set entity['.metadata']['etag'].
     #
     # @param {Object}  options                               The request options.
-    # @param options {LocationMode} locationMode                  Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values.
-    # @param options {Number}  timeoutIntervalInMs           The server timeout interval, in milliseconds, to use for the request.
-    # @param options {Number}  maximumExecutionTimeInMs      The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries.
-    # @param options {Boolean} useNagleAlgorithm             Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false.
+    # @option options {LocationMode} locationMode                  Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values.
+    # @option options {Number}  timeoutIntervalInMs           The server timeout interval, in milliseconds, to use for the request.
+    # @option options {Number}  maximumExecutionTimeInMs      The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries.
+    # @option options {Boolean} useNagleAlgorithm             Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false.
     # @return {Q.Promise} resolves when the entity is successfully removed.
     #
     delete: (options) ->
