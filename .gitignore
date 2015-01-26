@@ -11,5 +11,8 @@ pids
 logs
 results
 
-npm-debug.log
 node_modules
+lib
+doc
+.vagrant
+coverage

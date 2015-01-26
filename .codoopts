@@ -1,0 +1,8 @@
+--output ./doc
+--name "stand"
+--readme ./README.md
+--title "stand - Azure Table Storage Object-Document Mapper"
+./src
+-
+CHANGELOG.md
+LICENSE
