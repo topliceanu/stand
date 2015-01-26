@@ -118,19 +118,6 @@ class Model
             data = @extractData entry, @schema
             return Q new this data
 
-    # Executes the operations in the batch.
-    #
-    # @static
-    # @param {TableBatch} batch  The table batch to execute.
-    # @param {Object} options    The create options or callback function.
-    # @param options {LocationMode} locationMode      Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values.
-    # @param options {Number}  timeoutIntervalInMs    The server timeout interval, in milliseconds, to use for the request.
-    # @param options {Number}  maximumExecutionTimeInMs  The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries.
-    # @param options {Boolean} useNagleAlgorithm         Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false.
-    # @return {Q.Promise} resolves with the raw result from the service.
-    @executeBatch: (batch, options) ->
-        Q.ninvoke @service, 'executeBatch', @tableName, batch, options
-
     # Validates the given input data. If valid, it will return a
     # cleaned version of the input data.
     # Also makes sure the number of properties does not exceede the limit.
@@ -148,7 +135,7 @@ class Model
             return Q.resolve check.data
         else
             Q.reject new Error \
-                "Validation failed: #{JSON.stringify check.erorrs}"
+                "Validation failed: #{JSON.stringify check.errors}"
 
     # Method wraps each value of the data object in Edm Entities according to the given schema.
     #
@@ -186,6 +173,24 @@ class Model
 
     # @param {Object} encampsulated data.
     data: {}
+
+    # Acts as a getter for all properties stored in this entity.
+    #
+    # @param {String} key the name of the property.
+    # @return {Object} the value of the property.
+    #
+    get: (key) ->
+        return @data[key]
+
+    # Acts as a getter for all properties stored in this entity.
+    #
+    # @param {String} key the name of the property.
+    # @param {Object} the value of the property.
+    # @return {stand.Model} return the current model instance.
+    #
+    set: (key, value) ->
+        @data[key] = value
+        return this
 
     # Builds an instace of an entity and ensures the Table is correctly created.
     # It will not validate input data by default.

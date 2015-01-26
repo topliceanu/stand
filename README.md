@@ -40,36 +40,40 @@ npm install stand
 
 ## Quick Example
 
-```javascript
-var util = require('util');
+```coffeescript
+stand = require 'stand'
 
-var stand = require('stand');
+service = new stand.TableService 'my-storage-account', 'my-long-access-key'
 
+class Url extends stand.Model
+    @schema:
+        'Url': {type: 'Edm.String', required: true}
 
-stand.connect({account: 'your storage account', accessKey: 'your access key'});
+service.register 'url', Url
 
-var User = function (data) {
-    stand.Model.call(this, {
-        PartitionKey: data.last,
-        RowKey: data.first,
-        birthday: data.birth
-    });
-}
-User.schema = {
-    birth: {type: 'number'}
-};
-User.tableName = 'users';
-util.inherits(User, stand.Model);
+url = new Url
+    'PartitionKey': 'u',
+    'RowKey': '2EfWx5p', # short hash.
+    'Url': 'http://google.com' # original url
 
+url.insert().then ->
+    console.log 'successfully inserted the new url'
 
-var me = new User({first: "Alex", last: "Topliceanu", birth: 526574909});
-me.save();
+    Url.find()
+        .where('RowKey eq ?', '2EfWx5p')
+        .exec().then (urls) ->
+            console.log "The expanded url is", (urls[0].get 'Url')
+.fail (error) ->
+    console.log 'Failed to execute operations', error
 ```
 
 ## More Examples
 
 See more in the `/examples` directory. All examples have instructions on __how to run and test them__.
+Examples are written in coffeescript but they should work just as fine in javascript.
 
+- [examples/basic-usage.coffee](https://github.com/topliceanu/stand/blob/master/examples/basic-usage.js) - shows how to define a new model class, create a model, persist it then retrieve it from the tables service.
+- [examples/custom-schema.coffee](https://github.com/topliceanu/stand/blob/master/examples/custom-schema.js) - shows how to define a custom schema with default values, modifiers, validation and filtering.
 
 ## Contributing
 
@@ -82,10 +86,12 @@ See more in the `/examples` directory. All examples have instructions on __how t
     - if you don't use it, please consider learning it, it's easy to install and to get started with.
     - If you don't use it, then you have to:
          - install node.js and all node packages required in development using `$ npm install`
-         - For reference, see `./vagrant_boostrap.sh` for instructions on how to setup all dependencies on a fresh ubuntu 14.04 machine.
+         - For reference, see `./vagrant_boostrap.sh` for bash commands on how to setup all dependencies on a fresh ubuntu 14.04 machine.
     - Run the tests to make sure you have a correct setup: `$ npm run test`
+        - setup storage service connection credentials as global env variables: AZURE_STORAGE_ACCOUNT, AZURE_STORAGE_ACCESS_KEY
 4. Create a new branch and implement your feature.
  - make sure you add tests for your feature. In the end __all tests have to pass__! To run test suite `$ npm run test`.
+    - please note that due to the nature of Azure Table Storage Service, sometimes the endpoints may timeout, which leads to failed tests, so increase test timeout as needed.
  - make sure test coverage does not decrease. Run `$ npm run coverage` to open a browser window with the coverage report.
  - make sure you document your code and generated code looks ok. Run `$ npm run doc` to re-generate the documentation.
  - make sure code is linted (and tests too). Run `$ npm run lint`

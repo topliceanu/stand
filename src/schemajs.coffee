@@ -27,7 +27,7 @@ schemajs.types['Edm.Guid'] = (value) ->
     _.isString value
 
 schemajs.types['Edm.Boolean'] = (value) ->
-    _.isBoolean value
+    (_.isBoolean value) or (_.isString value)
 
 
 # Public API.

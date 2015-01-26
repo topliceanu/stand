@@ -4,6 +4,7 @@ Q = require 'q'
 
 Model = require '../src/Model'
 TableQuery = require '../src/TableQuery'
+schemajs = require '../src/schemajs'
 
 
 # NOTE! In order to make tests work, please set global environment variables:
@@ -134,6 +135,39 @@ describe 'Model', ->
                 chai.assert.equal results[0].data.age, 28
             .then (-> done()), done
 
+    describe '.get()', ->
+
+        it 'should retrieve property value', ->
+            class User extends Model
+                @schema:
+                    name: {type: 'Edm.String', max: 255}
+                    age: {type: 'Edm.Int32'}
+                    active: {type: 'Edm.Boolean'}
+            User.build @testTableName, @service
+
+            user = new User
+                name: 'me'
+                age: 28
+                active: false
+            chai.assert.equal user.get('name'), 'me', 'should return data'
+
+    describe '.set()', ->
+
+        it 'should set property value', ->
+            class User extends Model
+                @schema:
+                    name: {type: 'Edm.String', max: 255}
+                    age: {type: 'Edm.Int32'}
+                    active: {type: 'Edm.Boolean'}
+            User.build @testTableName, @service
+
+            user = new User
+                name: 'me'
+                age: 28
+                active: false
+            user.set 'age', 38
+            chai.assert.equal user.data.age, 38, 'should return user age'
+
     describe '.retrieve()', ->
 
         before (done) ->
@@ -212,6 +246,19 @@ describe 'Model', ->
 
     describe '.insert()', ->
 
+        before ->
+            # Register properties which act as validation methods.
+            schemajs.properties.email = (value) ->
+                EMAIL_REGEX = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+                return EMAIL_REGEX.test value
+            schemajs.properties.url = (value) ->
+                URL_REGEX = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/
+                return URL_REGEX.test value
+            # Register a filter which acts as a data modifier.
+            schemajs.filters.toHttp = (value) ->
+                if (value.indexOf 'http://' isnt 0) or (value.indexOf 'http://' isnt 0)
+                    return "http://#{value}"
+
         after (done) ->
             find =
                 PartitionKey: azure.TableUtilities.entityGenerator.String 'u'
@@ -219,21 +266,25 @@ describe 'Model', ->
             @service.deleteEntity @testTableName, find, done
 
         it 'should persist the model data in azure table', (done) ->
+
+
             class User extends Model
                 @schema:
-                    name: {type: 'Edm.String', max: 255}
-                    age: {type: 'Edm.Int32'}
-                    active: {type: 'Edm.Boolean'}
-                    birth: {type: 'Edm.DateTime'}
+                    name: {type: 'Edm.String', required: true, properties: {max: 255}}
+                    email: {type: 'Edm.String', required: true, properties: {email: true}}
+                    website: {type: 'Edm.String', fitlers: ['toHttp'], properties: {url: true}}
+                    age: {type: 'Edm.Int32', filters: ['toInt'], properties: {min: 18, max: 125}}
+                    active: {type: 'Edm.Boolean', default: true, filters: ['toBoolean']}
 
             User.build @testTableName, @service
 
             user = new User
                 PartitionKey: 'u'
                 RowKey: 'me'
-                name: 'alexandru topliceanu'
-                age: 28
-                birth: new Date
+                name: 'alex'
+                email: 'me@site.com'
+                age: '28'
+                active: 'yes'
             user.insert().then (persisted) ->
                 chai.assert.instanceOf persisted, Model,
                     'should return the model instance'
