@@ -5,6 +5,10 @@
 
 **Stand** is a simple Object Document Mapper on top of Azure Table Storage Service.
 
+## Why?
+
+Azure Table Storage sdk for node is really well written and documented. This project should be used along-side the basic driver and attempts to simply add syntactic sugar on top of the supported sdk, eg. simple data modeling, extensive usage of promises, etc.
+
 ## Status
 
 [![NPM](https://nodei.co/npm/stand.png?downloads=true&stars=true)](https://nodei.co/npm/stand/)
@@ -25,7 +29,8 @@
 
 - Lightweigh wrapper on top of the [official azure storage sdk](https://github.com/Azure/azure-storage-node) with a OOP syntax.
 - All methods return promises instead of using the callback pattern.
-- Flexible schema definition language using [schemajs](https://github.com/eleith/schemajs) which ensures entity data validation.
+- Flexible declarative schema DSL using [schemajs](https://github.com/eleith/schemajs) which allows easy configuration of entity data validation, defaults, etc.
+- Chaining table query API.
 
 ## Install
 

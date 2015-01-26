@@ -1,158 +1,317 @@
+azure = require 'azure-storage'
 chai = require 'chai'
 Q = require 'q'
 
-stand = require '../src/index'
+Model = require '../src/Model'
+TableQuery = require '../src/TableQuery'
 
 
-# To run these test on your machine, please replace credentials with your own.
-stand.service.connect
-    account: process.env.AZURE_STORAGE_ACCOUNT_NAME
-    accessKey: process.env.AZURE_STORAGE_ACCOUNT_ACCESS_KEY
-
-
+# NOTE! In order to make tests work, please set global environment variables:
+# AZURE_STORAGE_CONNECTION_STRING or AZURE_STORAGE_ACCOUNT
+# AZURE_STORAGE_ACCESS_KEY
+#
 describe 'Model', ->
+    @timeout 15000
 
-    # Compensate for large lag when working with azure table storage
-    # from outside the data center.
-    @timeout 20000
+    before (done) ->
+        @testTableName = 'user'
+        @service = azure.createTableService()
+        @service.createTableIfNotExists @testTableName, done
 
-    describe 'class properties', ->
+    after (done) ->
+        @service.deleteTableIfExists @testTableName, done
 
-        before ->
-            class @User extends stand.Model
-                @tableName: 'users'
+    describe '.build()', ->
+
+        it 'should correctly configure the model', (done) ->
+            class User extends Model
                 @schema:
-                    Username: {type: 'string+', required: true}
+                    name: {type: 'Edm.String', max: 255}
 
-            class @Event extends stand.Model
-                @tableName: 'events'
+            User.build @testTableName, @service
 
-        it '.build() should correctly set @ready '+
-           'after repeated instantiations', (done) ->
-            user1 = new @User
-            user2 = new @User
-            user3 = new @User
+            chai.assert.equal User.tableName, @testTableName,
+                'should have stored the table name'
 
-            event1 = new @Event
-            event2 = new @Event
-            event3 = new @Event
+            expected =
+                PartitionKey: {type: 'Edm.String', required: true}
+                RowKey: {type: 'Edm.String', required: true}
+                Timestamp: {type: 'Edm.DateTime'}
+                name: {type: 'Edm.String', max: 255}
+            chai.assert.deepEqual User.schema, expected,
+                'should have merged the defined schema with the implicit required fields'
 
-            chai.assert.ok Q.isPromise user1.constructor.ready
-            chai.assert.ok Q.isPromise user2.constructor.ready
-            chai.assert.ok Q.isPromise user3.constructor.ready
+            chai.assert.equal User.service, @service,
+                'should have attached the service intance to the model'
 
-            chai.assert.ok Q.isPromise event1.constructor.ready
-            chai.assert.ok Q.isPromise event2.constructor.ready
-            chai.assert.ok Q.isPromise event3.constructor.ready
+            chai.assert.ok Q.isPromise User.ready,
+                'should be a promise resolving when the table is ready'
 
-            chai.assert.equal user1.constructor.ready, user2.constructor.ready,
-                'all instances share the same ready function'
-
-            expectedSchema =
-                PartitionKey: {type: 'string+', required: true}
-                RowKey: {type: 'string+', required: true}
-                Username: {type: 'string+', required: true}
-            chai.assert.deepEqual @User.schema, expectedSchema,
-                'should have merged the defined schema'
-
-            Q.all([
-                user1.constructor.ready
-                user2.constructor.ready
-                user3.constructor.ready
-                event1.constructor.ready
-                event2.constructor.ready
-                event3.constructor.ready
-            ]).then (-> done()), done
-
-        it '.validate() should validate input data', (done) ->
-            data =
-                PartitionKey: 'admins'
-                RowKey: '1'
-                Username: 'me'
-                Password: 'fake'
-            (@User.validate data).then (cleanData) ->
-                expectedData =
-                    PartitionKey: 'admins'
-                    RowKey: '1'
-                    Username: 'me'
-                chai.assert.deepEqual cleanData, expectedData,
-                    'should return clean data'
-                chai.assert.isUndefined cleanData.Password,
-                    'removes the data not defined in schema'
+            User.ready.then =>
+                Q.ninvoke @service, 'doesTableExist', @testTableName
+            .then ([tableExists, body]) ->
+                chai.assert.isTrue tableExists, 'table should be ready for use'
             .then (-> done()), done
 
-        it '.createTableIfNotExists() should create a named table '+
-           'if it does not yet exist or leave it be', (done) ->
-            Q.all([
-                @User.createTableIfNotExists()
-                @Event.createTableIfNotExists()
-            ]).then (-> done()), done
+    describe '.query()', ->
 
-        it '.deleteTable() should remove tables from the service', (done) ->
-            Q.all([
-                @User.deleteTable()
-                @Event.deleteTable()
-            ]).then (-> done()), done
-
-    describe 'instance properties', ->
-
-        before ->
-            class @Email extends stand.Model
-                @tableName: 'emails'
-                @schema:
-                    Dest: {type: 'string+'}
-
-        it '.insertOrReplaceEntity() should insert or '+
-           'update and retrieve an entity', (done) ->
-            data =
-                PartitionKey: 'me'
-                RowKey: '1'
-                Dest: 'other'
-            email = new @Email data
-            email.insertOrReplaceEntity().then =>
-                @Email.queryEntity data.PartitionKey, data.RowKey
-            .then ([output, response]) ->
-                chai.assert.isTrue response.isSuccessful,
-                    'should have successfully retrieved the input data'
-                chai.assert.equal output.PartitionKey, data.PartitionKey,
-                    'same partition key'
-                chai.assert.equal output.RowKey, data.RowKey,
-                    'same row key'
-                chai.assert.equal output.Dest, data.Dest,
-                    'same custom var'
+        before (done) ->
+            Q().then =>
+                gen = azure.TableUtilities.entityGenerator
+                @me =
+                    PartitionKey: gen.String 'users'
+                    RowKey: gen.String 'me'
+                    name: gen.String 'alexandru topliceanu'
+                Q.ninvoke @service, 'insertEntity', @testTableName, @me
             .then (-> done()), done
 
-        it '.deleteEntity() should remove entity', (done) ->
+        after (done) ->
+            @service.deleteEntity @testTableName, @me, done
+
+        it 'should execute a tableQuery object against a table', (done) ->
+            class User extends Model
+                @schema:
+                    name: {type: 'Edm.String', max: 255}
+            User.build @testTableName, @service
+
+            tableQuery = new azure.TableQuery()
+                .where('RowKey eq ?', 'me')
+            (User.query tableQuery).then (results) =>
+                chai.assert.isArray results, 'should have returned an array'
+                chai.assert.lengthOf results, 1, 'should return one elem'
+                chai.assert.instanceOf results[0], Model,
+                    'should return a model instance'
+                chai.assert.equal results[0].data.PartitionKey, 'users'
+                chai.assert.equal results[0].data.RowKey, 'me'
+                chai.assert.equal results[0].data.name, 'alexandru topliceanu'
+            .then (-> done()), done
+
+    describe '.find()', ->
+
+        before (done) ->
+            Q().then =>
+                gen = azure.TableUtilities.entityGenerator
+                @me =
+                    PartitionKey: gen.String 'users'
+                    RowKey: gen.String 'me'
+                    name: gen.String 'topli'
+                    age: gen.Int32 28
+                    active: gen.Boolean true
+                Q.ninvoke @service, 'insertEntity', @testTableName, @me
+            .then (-> done()), done
+
+        after (done) ->
+            @service.deleteEntity @testTableName, @me, done
+
+        it 'should build and run a tableQuery against the current table', (done) ->
+            class User extends Model
+                @schema:
+                    name: {type: 'Edm.String', max: 255}
+                    age: {type: 'Edm.Int32'}
+                    active: {type: 'Edm.Boolean'}
+            User.build @testTableName, @service
+
+            query = User.find()
+            chai.assert.instanceOf query, TableQuery,
+                'should have created a new instance of TableQuery'
+
+            query.select('name', 'age')
+                 .top(1)
+                 .where('RowKey eq ?', 'me')
+
+            query.exec().then (results) ->
+                chai.assert.isArray results, 'should have returned an array'
+                chai.assert.lengthOf results, 1, 'should return one elem'
+                chai.assert.instanceOf results[0], Model,
+                    'should return a model instance'
+                chai.assert.isUndefined results[0].data.PartitionKey,
+                    'we did not select the PartitionKey'
+                chai.assert.isUndefined results[0].data.RowKey,
+                    'we did not select the RowKey'
+                chai.assert.isUndefined results[0].data.Timestamp,
+                    'we did not select the Timestamp'
+                chai.assert.equal results[0].data.name, 'topli'
+                chai.assert.equal results[0].data.age, 28
+            .then (-> done()), done
+
+    describe '.retrieve()', ->
+
+        before (done) ->
+            Q().then =>
+                gen = azure.TableUtilities.entityGenerator
+                @me =
+                    PartitionKey: gen.String 'users'
+                    RowKey: gen.String 'me'
+                    name: gen.String 'alexandru topliceanu'
+                Q.ninvoke @service, 'insertEntity', @testTableName, @me
+            .then (-> done()), done
+
+        after (done) ->
+            @service.deleteEntity @testTableName, @me, done
+
+        it 'should return the entity selected', (done) ->
+            class User extends Model
+                @schema:
+                    name: {type: 'Edm.String', max: 255}
+            User.build @testTableName, @service
+
+            (User.retrieve 'users', 'me').then (model) =>
+                chai.assert.instanceOf model, Model, 'should return a model'
+                chai.assert.equal model.data.PartitionKey, 'users'
+                chai.assert.equal model.data.RowKey, 'me'
+                chai.assert.equal model.data.name, 'alexandru topliceanu'
+            .then (-> done()), done
+
+    describe '.prepareEntity()', ->
+
+        it 'should format raw data into azure entity data', ->
+            schema =
+                'name': {type: 'Edm.String'}
+                'age': {type: 'Edm.Int32'}
+                'birth': {type: 'Edm.DateTime'}
+                'active': {type: 'Edm.Boolean'}
             data =
-                PartitionKey: 'me'
-                RowKey: '1'
-            email = new @Email data
-            email.deleteEntity().then =>
-                @Email.queryEntity data.PartitionKey, data.RowKey
+                'name': 'alex'
+                'age': 29
+                'birth': new Date
+                'active': true
+            expected =
+                'name': {$: 'Edm.String', _: 'alex'}
+                'age': {$: 'Edm.Int32', _: 29}
+                'birth': {$: 'Edm.DateTime', _: data.birth}
+                'active': {$: 'Edm.Boolean', _: true}
+            actual = Model.prepareEntity data, schema
+            chai.assert.deepEqual expected, actual,
+                'should correctly format the data'
+
+    describe '.extractData()', ->
+
+        it 'should extract plain data from an entity', ->
+            entity =
+                'PartitionKey': {$: 'Edm.String', _: 'users' }
+                'RowKey': {$: 'Edm.String', _: 'me' }
+                'Timestamp': {$: 'Edm.DateTime', _: "Sun Jan 25 2015 13:46:21 GMT+0000 (UTC)"}
+                'name': {_: 'alexandru topliceanu'},
+                '.metadata': { etag: 'W/"datetime\'2015-01-25T13:46:21.561796Z\'"' }
+
+            schema =
+                'PartitionKey': {type: 'Edm.String', required: true}
+                'RowKey': {type: 'Edm.String', required: true}
+                'Timestamp': {type: 'Edm.DateTime'}
+                'name': {type: 'Edm.String'}
+
+            expected =
+                'PartitionKey': 'users'
+                'RowKey': 'me'
+                'Timestamp': new Date "Sun Jan 25 2015 13:46:21 GMT+0000 (UTC)"
+                'name': 'alexandru topliceanu'
+
+            actual = Model.extractData entity, schema
+            chai.assert.deepEqual actual, expected,
+                'extract raw data from the serialized response'
+
+    describe '.insert()', ->
+
+        after (done) ->
+            find =
+                PartitionKey: azure.TableUtilities.entityGenerator.String 'u'
+                RowKey: azure.TableUtilities.entityGenerator.String 'me'
+            @service.deleteEntity @testTableName, find, done
+
+        it 'should persist the model data in azure table', (done) ->
+            class User extends Model
+                @schema:
+                    name: {type: 'Edm.String', max: 255}
+                    age: {type: 'Edm.Int32'}
+                    active: {type: 'Edm.Boolean'}
+                    birth: {type: 'Edm.DateTime'}
+
+            User.build @testTableName, @service
+
+            user = new User
+                PartitionKey: 'u'
+                RowKey: 'me'
+                name: 'alexandru topliceanu'
+                age: 28
+                birth: new Date
+            user.insert().then (persisted) ->
+                chai.assert.instanceOf persisted, Model,
+                    'should return the model instance'
+            .then (-> done()), done
+
+    describe '.insertOrReplace()', ->
+
+        after (done) ->
+            find =
+                PartitionKey: azure.TableUtilities.entityGenerator.String 'u'
+                RowKey: azure.TableUtilities.entityGenerator.String 'me'
+            @service.deleteEntity @testTableName, find, done
+
+        it 'should replace the model with new data in azure table', (done) ->
+            class User extends Model
+                @schema:
+                    name: {type: 'Edm.String', max: 255}
+                    age: {type: 'Edm.Int32'}
+                    active: {type: 'Edm.Boolean'}
+                    birth: {type: 'Edm.DateTime'}
+
+            User.build @testTableName, @service
+
+            user1 =
+                PartitionKey: 'u'
+                RowKey: 'me'
+                name: 'alexandru topliceanu'
+                age: 28
+                birth: new Date
+            user2 =
+                PartitionKey: 'u'
+                RowKey: 'me'
+                name: 'new name'
+                age: 38
+                birth: new Date
+
+            Q().then =>
+                Q.ninvoke @service, 'insertEntity', @testTableName, (User.prepareEntity user1, User.schema)
+            .then =>
+                (new User user2).insertOrReplace()
+            .then (persisted) =>
+                chai.assert.instanceOf persisted, Model,
+                    'should return the model instance'
+
+                Q.ninvoke @service, 'retrieveEntity', @testTableName, 'u', 'me'
+            .then ([entity, response]) =>
+                data = User.extractData entity, User.schema
+                chai.assert.equal data.name, user2.name, 'the entity name field was replaced'
+                chai.assert.equal data.age, user2.age, 'the entity age field was replaced'
+            .then (-> done()), done
+
+    describe '.delete()', ->
+
+        before (done) ->
+            Q().then =>
+                gen = azure.TableUtilities.entityGenerator
+                @me =
+                    PartitionKey: gen.String 'u'
+                    RowKey: gen.String 'me'
+                    name: gen.String 'alex'
+                Q.ninvoke @service, 'insertEntity', @testTableName, @me
+            .then (-> done()), done
+
+        it 'should remove an existing model from azure tables', (done) ->
+            class User extends Model
+                @schema:
+                    name: {type: 'Edm.String', max: 255}
+
+            User.build @testTableName, @service
+
+            user = new User
+                PartitionKey: 'u'
+                RowKey: 'me'
+
+            user.delete().then =>
+                Q.ninvoke @service, 'retrieveEntity', @testTableName, 'u', 'me'
             .then ->
-                chai.assert.ok false, 'should not get here'
+                chai.ok false, 'should have thrown an error, entity removed'
             , (error) ->
-                chai.assert.match error.message,
-                    /The specified resource does not exist./,
-                    'Should return an error'
-            .then (-> done()), done
-
-        it '.save() should validate and store the current entity data', (done)->
-            data =
-                PartitionKey: 'me'
-                RowKey: '2'
-                Dest: 'someone'
-                Unwanted: 'something'
-            email = new @Email data
-            email.save().then =>
-                @Email.queryEntity data.PartitionKey, data.RowKey
-            .then ([returnData, response]) ->
-                chai.assert.equal returnData.PartitionKey, data.PartitionKey,
-                    'correct partition'
-                chai.assert.equal returnData.RowKey, data.RowKey,
-                    'correct row'
-                chai.assert.equal returnData.Dest, data.Dest,
-                    'correct custom param'
-                chai.assert.isUndefined returnData.Unwanted,
-                    'has removed the non-expected key'
+                chai.assert.isDefined error, 'should throuw an error'
             .then (-> done()), done

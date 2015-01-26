@@ -21,3 +21,7 @@ su - vagrant -c "cd /home/vagrant/node-v$NODE_VERSION; sudo make install"
 
 # Install node dependencies.
 su - vagrant -c "cd /vagrant/; npm install"
+
+# Set env variables relevant to the stand project.
+su - vagrant -c "export AZURE_STORAGE_ACCOUNT='vtdev'"
+su - vagrant -c "export AZURE_STORAGE_ACCESS_KEY='S9LM1OJFY2etW7nx4LsvgbZmEyZRsS9OQ195qRa+tQcp71a8VYv+OEvqf3kjun1Ot1mzFy4p5g1wWMbJVXva6A=='"

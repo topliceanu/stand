@@ -3,6 +3,7 @@ azure = require 'azure-storage'
 Q = require 'q'
 
 schemajs = require './schemajs'
+TableQuery = require './TableQuery'
 
 
 # Class manipulates tables and entities on the Azure Table Storage Service.
@@ -26,12 +27,45 @@ class Model
 
     # @static {Object} table schema used for validation. No more than 252
     # properties are allowed with the mandatory PartitionKey and RowKey.
-    @schema:
+    @schema: {}
+
+    # @static {Object} all schemas must contain PartitionKey and RowKey. They also have a ready-only Timestamp key.
+    @defaultSchema:
         PartitionKey: {type: 'Edm.String', required: true}
         RowKey: {type: 'Edm.String', required: true}
+        Timestamp: {type: 'Edm.DateTime'}
 
     # @static {Number} max number of properties in an entity.
     @MAX_NUM_PROPERTIES: 255
+
+    # Utility method to initiate the table model. It make sure the table exists
+    # and is ready for usage.
+    # This method should not be called, it is used in TableService.register
+    #
+    # @static
+    # @see {TableService.register}
+    # @param {String} tableName name of the table entity created in azure.
+    @build: (tableName, service) ->
+        unless (_.isString tableName) and
+               (/^([A-Za-z][A-Za-z0-9]{2,62})$/.test tableName)
+            throw new Error "Bad name for a table: #{tableName}"
+
+        # Attach the table name to the Model class.
+        @tableName = tableName
+
+        # Attach a ready promise to the Model class.
+        # All operations to the model will only if everything is ready.
+        deferred = Q.defer()
+        service.createTableIfNotExists tableName, deferred.makeNodeResolver()
+        @ready = deferred.promise
+
+        # Attach the service instance.
+        @service = service
+
+        # Build schema detection.
+        @schema = _.extend {}, @defaultSchema, @schema
+
+        return this
 
     # Queries data in a table. To retrieve a single entity by partition key and row key, use retrieve entity.
     #
@@ -49,32 +83,40 @@ class Model
     # @param options {TableService.propertyResolver}  propertyResolver               The property resolver. Given the partition key, row key, property name, property value and the property Edm type if given by the service, returns the Edm type of the property.
     # @return {Q.Promise} resolves with a list of Model instances with data.
     @query: (tableQuery, currentToken, options) ->
-        Q().then =>
+        @ready.then =>
             Q.ninvoke @service, 'queryEntities', @tableName, tableQuery, currentToken, options
-        .then (entities) =>
-            return Q _.map entities, (entity) =>
-                new this entity
+        .then ([{entries}, response]) =>
+            return Q _.map entries, (entry) =>
+                data = @extractData entry, @schema
+                new this data
+
+    # Builds a query object which can be executed agains the current table.
+    #
+    # @return {TableQuery} instance of stand.TableQuery bound to the current Model.
+    @find: ->
+        new TableQuery this
 
     # Retrieves an entity from a table.
     #
     # @static
-    # @param {string}             partitionKey                                    The partition key.
-    # @param {string}             rowKey                                          The row key.
-    # @param {object}             options                                       The request options.
-    # @param options {LocationMode}       locationMode                          Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values.
-    # @param options {int}                timeoutIntervalInMs                   The server timeout interval, in milliseconds, to use for the request.
-    # @param options {string}             payloadFormat                         The payload format to use for the request.
-    # @param options {int}                maximumExecutionTimeInMs              The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries.
-    # @param options {bool}               useNagleAlgorithm                     Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false.
+    # @param {string}  partitionKey                                    The partition key.
+    # @param {string}  rowKey                                          The row key.
+    # @param {object}  options                                       The request options.
+    # @param options {LocationMode}  locationMode                          Specifies the location mode used to decide which location the request should be sent to. Please see StorageUtilities.LocationMode for the possible values.
+    # @param options {int}           timeoutIntervalInMs                   The server timeout interval, in milliseconds, to use for the request.
+    # @param options {string}        payloadFormat                         The payload format to use for the request.
+    # @param options {int}           maximumExecutionTimeInMs              The maximum execution time, in milliseconds, across all potential retries, to use when making this request. The maximum execution time interval begins at the time that the client begins building the request. The maximum execution time is checked intermittently while performing requests, and before executing retries.
+    # @param options {bool}          useNagleAlgorithm                     Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false.
     # @param options {TableService.propertyResolver}  propertyResolver          The property resolver. Given the partition key, row key, property name, property value, and the property Edm type if given by the service, returns the Edm type of the property.
-    # @param options {Function} entityResolver                          The entity resolver. Given the single entity returned by the query, returns a modified object.
-    # @return {Q.Promise}
+    # @param options {Function} entityResolver        The entity resolver. Given the single entity returned by the query, returns a modified object.
+    # @return {Q.Promise} resolves with a list of returned data encapsulated in models.
     #
     @retrieve: (partitionKey, rowKey, options) ->
-        Q().then =>
+        @ready.then =>
             Q.ninvoke @service, 'retrieveEntity', @tableName, partitionKey, rowKey, options
-        .then (response) =>
-            return Q new this response.data
+        .then ([entry, response]) =>
+            data = @extractData entry, @schema
+            return Q new this data
 
     # Executes the operations in the batch.
     #
@@ -111,43 +153,34 @@ class Model
     # Method wraps each value of the data object in Edm Entities according to the given schema.
     #
     # @static
-    # @param {Object} data hash data to prepare.
+    # @param {Object} data hash data to prepare, with format {"key": "value"}
     # @param {Object} schema object schema used to extract `type` information.
+    # @return {Object} with the format {"key": {$: "edm data type", _: "value"}}
+    #
     @prepareEntity: (data, schema) ->
         output = {}
-        for key, value of data
-            type = schema[key][type].replace 'Edm.', ''
-            output[key] = azure.TableUtilities.entityGenerator type
+        for key, value of data when key in _.keys schema
+            type = schema?[key]?.type?.replace? 'Edm.', ''
+            output[key] = azure.TableUtilities.entityGenerator[type]?(value) if type?
         output
 
-    # Utility method to initiate the table model. It make sure the table exists
-    # and is ready for usage.
-    # This method should not be called, it is used in TableService.register
+    # Method extract raw data from a serialized entity. The format
     #
     # @static
-    # @see {TableService.register}
-    # @param {String} tableName name of the table entity created in azure.
-    @build: (tableName, service) ->
-        unless (_.isString tableName) and
-               (/^([A-Za-z][A-Za-z0-9]{2,62})$/.test tableName)
-            throw new Error "Bad name for a table: #{tableName}"
-
-        # Attach the table name to the Model class.
-        @tableName = tableName
-
-        # Attach a ready promise to the Model class.
-        # All operations to the model will only if everything is ready.
-        deferred = Q.defer
-        service.createTableIfNotExists tableName, deferred.makeNodeResolver()
-        @ready = deferred.promise
-
-        # Attach the service instance.
-        @service = service
-
-        # Build schema detection.
-        @schema = _.extend {}, @defaultSchema, @schema
-
-        return this
+    # @param {Object} entity hash with format {"key": {$: "edm data type", _: "value"}}
+    # @param {Object} schema object schema used to extract `type` information.
+    # @return {Object} plain data object, format {"key": "value"}
+    #
+    @extractData: (entity, schema) ->
+        output = {}
+        for key, value of entity when key in _.keys schema
+            type = schema[key].type
+            output[key] = switch type
+                when 'Edm.Boolean' then !!value._
+                when 'Edm.Int32', 'Edm.Int64' then +value._
+                when 'Edm.DateTime' then new Date value._
+                else value._
+        output
 
     ## Instance.
 
@@ -172,17 +205,17 @@ class Model
     # @param options {bool}                options.useNagleAlgorithm]                     Determines whether the Nagle algorithm is used; true to use the Nagle algorithm; otherwise, false. The default value is false.
     # @param options {TableService~propertyResolver}   options.propertyResolver]          The property resolver. Only applied if echoContent is true. Given the partition key, row key, property name, property value, and the property Edm type if given by the service, returns the Edm type of the property.
     # @param options {Function}  options.entityResolver                          The entity resolver. Only applied if echoContent is true. Given the single entity returned by the insert, returns a modified object.
-    # @return {Q.Promise} resolves when the entity is successfully persisted.
+    # @return {Q.Promise} resolves with the Model instance when it is successfully persisted.
     #
     insert: (options) ->
         Q().then =>
             @constructor.validate @data
         .then (cleanData) =>
-            @constructor.prepareEntity cleanData
+            @constructor.prepareEntity cleanData, @constructor.schema
         .then (entityData) =>
             Q.ninvoke @constructor.service, 'insertEntity', @constructor.tableName, entityData, options
         .then (response) =>
-            @data = response.data
+            Q this
 
     # Inserts or updates a new entity into a table.
     #
@@ -197,11 +230,11 @@ class Model
         Q().then =>
             @constructor.validate @data
         .then (cleanData) =>
-            @constructor.prepareEntity cleanData
+            @constructor.prepareEntity cleanData, @constructor.schema
         .then (entityData) =>
             Q.ninvoke @constructor.service, 'insertOrReplaceEntity', @constructor.tableName, entityData, options
-        .then (response) =>
-            @data = response.data
+        .then =>
+            Q this
 
     # Updates an existing entity within a table by replacing it. To update conditionally based on etag, set entity['.metadata']['etag'].
     #
@@ -216,11 +249,11 @@ class Model
         Q().then =>
             @constructor.validate @data
         .then (cleanData) =>
-            @constructor.prepareEntity cleanData
+            @constructor.prepareEntity cleanData, @constructor.schema
         .then (entityData) =>
             Q.ninvoke @constructor.service, 'updateEntity', @constructor.tableName, entityData, options
         .then (response) =>
-            @data = response.data
+            Q this
 
     # Updates an existing entity within a table by merging new property values into the entity. To merge conditionally based on etag, set entity['.metadata']['etag'].
     #
@@ -235,11 +268,11 @@ class Model
         Q().then =>
             @constructor.validate @data
         .then (cleanData) =>
-            @constructor.prepareEntity cleanData
+            @constructor.prepareEntity cleanData, @constructor.schema
         .then (entityData) =>
             Q.ninvoke @constructor.service, 'mergeEntity', @constructor.tableName, entityData, options
-        .then (response) =>
-            @data = response.data
+        .then =>
+            Q this
 
     # Inserts or updates an existing entity within a table by merging new property values into the entity.
     #
@@ -254,11 +287,11 @@ class Model
         Q().then =>
             @constructor.validate @data
         .then (cleanData) =>
-            @constructor.prepareEntity cleanData
+            @constructor.prepareEntity cleanData, @constructor.schema
         .then (entityData) =>
             Q.ninvoke @constructor.service, 'insertOrMergeEntity', @constructor.tableName, entityData, options
-        .then (response) =>
-            @data = response.data
+        .then =>
+            Q this
 
     # Deletes an entity within a table. To delete conditionally based on etag, set entity['.metadata']['etag'].
     #
@@ -273,7 +306,7 @@ class Model
         Q().then =>
             @constructor.validate @data
         .then (cleanData) =>
-            @constructor.prepareEntity cleanData
+            @constructor.prepareEntity cleanData, @constructor.schema
         .then (entityData) =>
             Q.ninvoke @constructor.service, 'deleteEntity', @constructor.tableName, entityData, options
 

@@ -4,7 +4,8 @@ Q = require 'q'
 
 # Class encapsulates the connection to the azure table storage service
 # It provides means to register Table models.
-class TableService extends azure.TableSevice
+#
+class TableService extends azure.TableService
 
     # Initiates a new Table with the Azure Storage Service.
     #
@@ -17,4 +18,5 @@ class TableService extends azure.TableSevice
         Model.build tableName, this
 
 
+# Public API.
 module.exports = TableService
