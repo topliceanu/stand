@@ -7,6 +7,17 @@ Q = require 'q'
 #
 class TableService extends azure.TableService
 
+    # Creates a new connection to the Azure Table Storage Service.
+    #
+    # @see {azure.TableService}
+    # @param {String} storageAccountOrConnectionString The storage account or the connection string.
+    # @param {String} storageAccessKey The storage access key.
+    # @param {Object} host  The host address. To define primary only, pass a string. Otherwise 'host.primaryHost' defines the primary host and 'host.secondaryHost' defines the secondary host.
+    # @param {String} sasToken The Shared Access Signature token.
+    #
+    constructor: ->
+        super arguments..
+
     # Initiates a new Table with the Azure Storage Service.
     #
     # @see {stand.Model.build}
