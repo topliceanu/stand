@@ -9,5 +9,4 @@ branches:
     only:
         - master
 env:
-    - AZURE_STORAGE_ACCOUNT="vtdev"
-    - AZURE_STORAGE_ACCESS_KEY="S9LM1OJFY2etW7nx4LsvgbZmEyZRsS9OQ195qRa+tQcp71a8VYv+OEvqf3kjun1Ot1mzFy4p5g1wWMbJVXva6A=="
+    - AZURE_STORAGE_ACCOUNT="vtdev" AZURE_STORAGE_ACCESS_KEY="S9LM1OJFY2etW7nx4LsvgbZmEyZRsS9OQ195qRa+tQcp71a8VYv+OEvqf3kjun1Ot1mzFy4p5g1wWMbJVXva6A=="
